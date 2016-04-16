@@ -9,7 +9,7 @@ circleSpeed = 200 / 60
 circleDiameter = 30
 coolingRecovery = 35  # % of energy needed before cooldown expires
 deathRayColor = 0xff0000
-deathRaySpeed = 600 / 60
+deathRaySpeed = 450 / 60
 drifterDiameter = 40
 drifterSpeed = 250 / 60
 drifterColor = 0xed4588
@@ -21,8 +21,10 @@ scrH = 600
 shieldDiameter = 50
 straferColor = 0xd654a0
 straferDiameter = 25
-straferFireChance = 1 / 60
-straferSpeed = 300 / 60
+straferFireChance = 0.5 / 60
+straferMinDistance = 250
+straferMaxDistance = 300
+straferSpeed = 150 / 60
 tau = 2 * Math.PI
 triangleAccel = 30 / 60
 triangleMaxSpeed = 600 / 60
@@ -475,9 +477,9 @@ processDrifterMovement = (drifter) ->
 
 processStraferMovement = (strafer) ->
   dist = Math.sqrt((strafer.x-player.x)**2 + (strafer.y-player.y)**2)
-  if dist < 200
+  if dist < straferMinDistance
     runFromPlayer strafer
-  else if dist > 250
+  else if dist > straferMaxDistance
     moveToPlayer strafer
   else
     circlePlayer strafer
