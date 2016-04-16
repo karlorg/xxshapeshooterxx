@@ -17,6 +17,9 @@ playerColor = 0xffff0b
 scrW = 800
 scrH = 600
 shieldDiameter = 50
+straferColor = 0xd654a0
+straferDiameter = 25
+straferSpeed = 300 / 60
 tau = 2 * Math.PI
 triangleAccel = 30 / 60
 triangleMaxSpeed = 600 / 60
@@ -221,11 +224,16 @@ drawEnemies = ->
     drawEnemy enemy
 
 drawEnemy = (enemy) ->
-  drawDrifter enemy
+  switch enemy.type
+    when 'drifter'
+      drawDrifter enemy
+    when 'strafer'
+      drawStrafer enemy
+  return
 
 drawDrifter = (drifter) ->
   graphics.lineStyle 0
-  graphics.beginFill enemyColor, 1.0
+  graphics.beginFill drifterColor, 1.0
   shape = [[1,1], [0.6, 0],[1,-1],[0, -0.6],
            [-1,-1], [-0.6, 0], [-1, 1], [0, 0.6]]
   for point in shape
@@ -236,6 +244,14 @@ drawDrifter = (drifter) ->
   for [px, py] in shape
     {x, y} = toScreen px+drifter.x, py+drifter.y
     graphics.lineTo x, y
+  graphics.endFill()
+  return
+
+drawStrafer = (strafer) ->
+  graphics.lineStyle 0
+  graphics.beginFill straferColor, 1.0
+  {x, y} = toScreen strafer.x, strafer.y
+  graphics.drawCircle x, y, distToScreen(straferDiameter)
   graphics.endFill()
   return
 
@@ -320,7 +336,7 @@ processCircleMovement = ->
 
   player.angle = Math.atan2 player.vx, -player.vy
 
-  movePlayerByVel()
+  moveEntityByVel player
 
   return
 
@@ -351,22 +367,22 @@ processTriangleMovement = ->
 
   return
 
-movePlayerByVel = ->
-  player.x += player.vx
-  player.y += player.vy
+moveEntityByVel = (entity) ->
+  entity.x += entity.vx
+  entity.y += entity.vy
 
-  if player.x - circleDiameter*0.5 < 0
-    player.x = circleDiameter*0.5
-    player.vx = 0
-  if player.x + circleDiameter*0.5 > 1000
-    player.x = 1000 - circleDiameter*0.5
-    player.vx = 0
-  if player.y - circleDiameter*0.5 < 0
-    player.y = circleDiameter*0.5
-    player.vy = 0
-  if player.y + circleDiameter*0.5 > 1000
-    player.y = 1000 - circleDiameter*0.5
-    player.vy = 0
+  if entity.x - circleDiameter*0.5 < 0
+    entity.x = circleDiameter*0.5
+    entity.vx = 0
+  if entity.x + circleDiameter*0.5 > 1000
+    entity.x = 1000 - circleDiameter*0.5
+    entity.vx = 0
+  if entity.y - circleDiameter*0.5 < 0
+    entity.y = circleDiameter*0.5
+    entity.vy = 0
+  if entity.y + circleDiameter*0.5 > 1000
+    entity.y = 1000 - circleDiameter*0.5
+    entity.vy = 0
 
   return
 
@@ -400,7 +416,11 @@ processWeaponEnergy = ->
 
 processEnemyMovement = ->
   for enemy in enemies
-    processDrifterMovement enemy
+    switch enemy.type
+      when 'drifter'
+        processDrifterMovement enemy
+      when 'strafer'
+        processStraferMovement enemy
   return
 
 processDrifterMovement = (drifter) ->
@@ -420,6 +440,29 @@ processDrifterMovement = (drifter) ->
     drifter.y = 1000 - drifterDiameter*0.5
     drifter.vy *= -1
 
+  return
+
+processStraferMovement = (strafer) ->
+  dist = Math.sqrt((strafer.x-player.x)**2 + (strafer.y-player.y)**2)
+  if dist < 250
+    runFromPlayer strafer
+  else if dist > 300
+    moveToPlayer strafer
+  # circlePlayer strafer
+  return
+
+runFromPlayer = (enemy) ->
+  angle = Math.atan2 enemy.x-player.x, enemy.y-player.y
+  enemy.vx = enemy.speed * Math.sin angle
+  enemy.vy = enemy.speed * Math.cos angle
+  moveEntityByVel enemy
+  return
+
+moveToPlayer = (enemy) ->
+  angle = Math.atan2 player.x-enemy.x, player.y-enemy.y
+  enemy.vx = enemy.speed * Math.sin angle
+  enemy.vy = enemy.speed * Math.cos angle
+  moveEntityByVel enemy
   return
 
 addPlayerThrust = ->
@@ -487,23 +530,47 @@ collideBulletsAndEnemies = ->
   return
 
 spawnEnemy = ->
+  if game.rnd.frac() < 0.5
+    spawnDrifter()
+  else
+    spawnStrafer()
+  return
+
+spawnDrifter = ->
   enemy = {
     type: 'drifter'
   }
-  x = null
-  until x != null and Math.abs(x-player.x) > 200
-    x = game.rnd.between drifterDiameter, 1000-drifterDiameter
-  y = null
-  until y != null and Math.abs(y-player.y) > 200
-    y = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  {x, y} = getEnemySpawnPoint()
   enemy.x = x
   enemy.y = y
   angle = game.rnd.realInRange 0, tau
   enemy.vx = drifterSpeed * Math.cos angle
   enemy.vy = drifterSpeed * Math.sin angle
   enemy.radius = drifterDiameter / 2
+  enemy.speed = drifterSpeed
   enemies.push enemy
   return enemy
+
+spawnStrafer = ->
+  enemy = {
+    type: 'strafer'
+  }
+  {x, y} = getEnemySpawnPoint()
+  enemy.x = x
+  enemy.y = y
+  enemy.radius = straferDiameter / 2
+  enemy.speed = straferSpeed
+  enemies.push enemy
+  return enemy
+
+getEnemySpawnPoint = ->
+  x = null
+  until x != null and Math.abs(x-player.x) > 200
+    x = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  y = null
+  until y != null and Math.abs(y-player.y) > 200
+    y = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  return {x, y}
 
 killPlayer = ->
   player.alive = false
