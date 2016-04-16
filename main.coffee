@@ -8,6 +8,8 @@ circleInertia = 0.85
 circleSpeed = 200 / 60
 circleDiameter = 30
 coolingRecovery = 35  # % of energy needed before cooldown expires
+deathRayColor = 0xff0000
+deathRaySpeed = 600 / 60
 drifterDiameter = 40
 drifterSpeed = 250 / 60
 drifterColor = 0xed4588
@@ -19,6 +21,7 @@ scrH = 600
 shieldDiameter = 50
 straferColor = 0xd654a0
 straferDiameter = 25
+straferFireChance = 1 / 60
 straferSpeed = 300 / 60
 tau = 2 * Math.PI
 triangleAccel = 30 / 60
@@ -28,6 +31,7 @@ weaponColor = 0x22ddff
 
 bullets = []
 cursors = null
+deathRays = []
 enemies = []
 game = null
 graphics = null
@@ -98,11 +102,13 @@ update = ->
   processWeaponEnergy()
 
   processEnemyMovement()
+  processEnemyFire()
   processShapeshiftKeys()
   processPlayerMovement()
   # addPlayerThrust()
   processThrustParticles()
   processBulletMovement()
+  processDeathRayMovement()
 
   enemiesToKill = []
   for enemy, i in enemies
@@ -144,6 +150,7 @@ draw = ->
   drawEnemies()
   drawShield()
   drawBullets()
+  drawDeathRays()
   drawEnergyLevels()
   return
 
@@ -264,6 +271,15 @@ drawBullets = ->
     graphics.endFill()
   return
 
+drawDeathRays = ->
+  graphics.lineStyle 0
+  for deathRay in deathRays
+    graphics.beginFill deathRayColor, 1.0
+    {x, y} = toScreen deathRay.x, deathRay.y
+    graphics.drawRect x, y, 2, 2
+    graphics.endFill()
+  return
+
 drawShield = ->
   return unless weapons.circle.active
   graphics.lineStyle 2, weaponColor, 0.8
@@ -295,6 +311,7 @@ shootTriangle = ->
     x: player.x
     y: player.y
     angle: player.angle
+    speed: bulletSpeed
   }
   bullets.push bullet
   return bullet
@@ -303,6 +320,13 @@ playerSaysLeft = -> cursors.left.isDown or keys.left.isDown
 playerSaysRight = -> cursors.right.isDown or keys.right.isDown
 playerSaysUp = -> cursors.up.isDown or keys.up.isDown
 playerSaysDown = -> cursors.down.isDown or keys.down.isDown
+
+processEnemyFire = ->
+  for enemy in enemies
+    if enemy.type == 'strafer'
+      if game.rnd.frac() < straferFireChance
+        straferFire enemy
+  return
 
 processShapeshiftKeys = ->
   if keys[1].isDown
@@ -484,6 +508,17 @@ circlePlayer = (enemy) ->
     enemy.strafeDir *= -1
   return
 
+straferFire = (strafer) ->
+  angleToPlayer = Math.atan2 player.x-strafer.x, strafer.y-player.y
+  deathRay = {
+    x: strafer.x
+    y: strafer.y
+    angle: angleToPlayer
+    speed: deathRaySpeed
+  }
+  deathRays.push deathRay
+  return
+
 addPlayerThrust = ->
   speed = Math.sqrt(player.vx**2 + player.vy**2)
   chance = 0.1 + speed * (200 / 60) * 0.8
@@ -510,18 +545,26 @@ processThrustParticles = ->
   return
 
 processBulletMovement = ->
+  processProjectileMovement bullets
+  return
+
+processDeathRayMovement = ->
+  processProjectileMovement deathRays
+  return
+
+processProjectileMovement = (ary) ->
   spent = []
-  for bullet, i in bullets
-    bullet.x += bulletSpeed * Math.sin bullet.angle
-    bullet.y -= bulletSpeed * Math.cos bullet.angle
-    if (bullet.x <= 0 or bullet.x >= 1000 or
-        bullet.y <= 0 or bullet.y >= 1000)
+  for proj, i in ary
+    proj.x += proj.speed * Math.sin proj.angle
+    proj.y -= proj.speed * Math.cos proj.angle
+    if (proj.x <= 0 or proj.x >= 1000 or
+        proj.y <= 0 or proj.y >= 1000)
       spent.push i
   # remove spent
   i = spent.length
   while i > 0
     i -= 1
-    bullets.splice spent[i], 1
+    ary.splice spent[i], 1
   return
 
 collideBulletsAndEnemies = ->
