@@ -16,6 +16,9 @@ scrH = 600
 shieldColor = 0x22ddff
 shieldDiameter = 50
 tau = 2 * Math.PI
+triangleAccel = 30 / 60
+triangleMaxSpeed = 600 / 60
+triangleTurnRate = (tau/2) / 60
 
 cursors = null
 enemies = []
@@ -108,7 +111,7 @@ update = ->
   return
 
 render = ->
-  # game.debug.text "#{player.karl.state}", 0, 500
+  # game.debug.text "#{player.angle / tau}", 0, 500
   return
 
 draw = ->
@@ -155,16 +158,16 @@ drawPlayerTriangle = ->
   for i in [0..2]
     angle = i * tau / 3
     # no idea why *2 here :/
-    x = radius * 2 * Math.cos angle
-    y = radius * 2 * Math.sin angle
+    x = radius * 2 * Math.sin angle
+    y = - radius * 2 * Math.cos angle
     points.push [x, y]
 
   # rotate to player angle
   for point in points
     [x, y] = point
     angle = player.angle
-    point[0] = y * Math.cos(angle) + x * Math.sin(angle)
-    point[1] = x * Math.cos(angle) - y * Math.sin(angle)
+    point[0] = x * Math.cos(angle) - y * Math.sin(angle)
+    point[1] = y * Math.cos(angle) + x * Math.sin(angle)
 
   # translate to player pos
   for point in points
@@ -221,7 +224,11 @@ processShapeshiftKeys = ->
   return
 
 processPlayerMovement = ->
-  processCircleMovement()
+  switch player.mode
+    when 'circle' then processCircleMovement()
+    when 'triangle' then processTriangleMovement()
+    else throw new Error "unrecognised mode: #{player.mode}"
+  return
 
 processCircleMovement = ->
   targetvx = 0
@@ -239,17 +246,49 @@ processCircleMovement = ->
   player.vx = circleInertia * player.vx + (1-circleInertia) * targetvx
   player.vy = circleInertia * player.vy + (1-circleInertia) * targetvy
 
-  player.angle = Math.atan2 player.vx, player.vy
+  player.angle = Math.atan2 player.vx, -player.vy
 
+  movePlayerByVel()
+
+  return
+
+processTriangleMovement = ->
+  targetrot = 0
+  if playerSaysLeft() then targetrot -= triangleTurnRate
+  if playerSaysRight() then targetrot += triangleTurnRate
+  targetaccel = 0
+  if playerSaysUp() then targetaccel += triangleAccel
+  if playerSaysDown() then targetaccel -= triangleAccel
+
+  player.angle += targetrot
+
+  normalX = Math.sin player.angle
+  normalY = - Math.cos player.angle
+  dvx = normalX * targetaccel
+  dvy = normalY * targetaccel
+  player.vx += dvx
+  player.vy += dvy
+
+  movePlayerByVel()
+
+  return
+
+movePlayerByVel = ->
   player.x += player.vx
   player.y += player.vy
 
-  if player.x - circleDiameter*0.5 < 0 then player.x = circleDiameter*0.5
+  if player.x - circleDiameter*0.5 < 0
+    player.x = circleDiameter*0.5
+    player.vx = 0
   if player.x + circleDiameter*0.5 > 1000
     player.x = 1000 - circleDiameter*0.5
-  if player.y - circleDiameter*0.5 < 0 then player.y = circleDiameter*0.5
+    player.vx = 0
+  if player.y - circleDiameter*0.5 < 0
+    player.y = circleDiameter*0.5
+    player.vy = 0
   if player.y + circleDiameter*0.5 > 1000
     player.y = 1000 - circleDiameter*0.5
+    player.vy = 0
 
   return
 
