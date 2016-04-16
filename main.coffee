@@ -41,11 +41,19 @@ create = ->
     right: Phaser.KeyCode.S
     up: Phaser.KeyCode.W
     down: Phaser.KeyCode.R
+    1: Phaser.KeyCode.ONE
+    2: Phaser.KeyCode.TWO
+    3: Phaser.KeyCode.THREE
+    4: Phaser.KeyCode.FOUR
   game.input.keyboard.addKeyCapture [
     Phaser.KeyCode.A
     Phaser.KeyCode.R
     Phaser.KeyCode.S
     Phaser.KeyCode.W
+    Phaser.KeyCode.ONE
+    Phaser.KeyCode.TWO
+    Phaser.KeyCode.THREE
+    Phaser.KeyCode.FOUR
     Phaser.KeyCode.UP
     Phaser.KeyCode.DOWN
     Phaser.KeyCode.LEFT
@@ -82,6 +90,7 @@ update = ->
     fire()
 
   processEnemyMovement()
+  processShapeshiftKeys()
   processPlayerMovement()
 
   enemiesToKill = []
@@ -126,11 +135,51 @@ drawArenaBounds = ->
 
 drawPlayer = ->
   return unless player.alive
+  switch player.mode
+    when 'circle' then drawPlayerCircle()
+    when 'triangle' then drawPlayerTriangle()
+    else throw new Error "unrecognised mode: #{player.mode}"
+  return
+
+drawPlayerCircle = ->
   graphics.lineStyle 0
   graphics.beginFill playerColor, 1.0
   {x, y} = toScreen player.x, player.y
   graphics.drawCircle x, y, distToScreen(circleDiameter)
   graphics.endFill()
+  return
+
+drawPlayerTriangle = ->
+  radius = distToScreen(circleDiameter/2)
+  points = []
+  for i in [0..2]
+    angle = i * tau / 3
+    # no idea why *2 here :/
+    x = radius * 2 * Math.cos angle
+    y = radius * 2 * Math.sin angle
+    points.push [x, y]
+
+  # rotate to player angle
+  for point in points
+    [x, y] = point
+    angle = player.angle
+    point[0] = y * Math.cos(angle) + x * Math.sin(angle)
+    point[1] = x * Math.cos(angle) - y * Math.sin(angle)
+
+  # translate to player pos
+  for point in points
+    point[0] += player.x
+    point[1] += player.y
+
+  graphics.lineStyle 0
+  graphics.beginFill playerColor, 1.0
+  {x, y} = toScreen points[2][0], points[2][1]
+  graphics.moveTo x, y
+  for [x, y] in points
+    {x: sx, y: sy} = toScreen x, y
+    graphics.lineTo sx, sy
+  graphics.endFill()
+
   return
 
 drawEnemies = ->
@@ -163,6 +212,13 @@ playerSaysLeft = -> cursors.left.isDown or keys.left.isDown
 playerSaysRight = -> cursors.right.isDown or keys.right.isDown
 playerSaysUp = -> cursors.up.isDown or keys.up.isDown
 playerSaysDown = -> cursors.down.isDown or keys.down.isDown
+
+processShapeshiftKeys = ->
+  if keys[1].isDown
+    shiftToCircle()
+  else if keys[2].isDown
+    shiftToTriangle()
+  return
 
 processPlayerMovement = ->
   processCircleMovement()
@@ -254,3 +310,11 @@ enemyTouchingPlayer = (enemy) ->
 doCirclesIntersect = (x0, y0, r0, x1, y1, r1) ->
   distSq = (x0-x1)**2 + (y0-y1)**2
   return distSq <= (r0+r1)**2
+
+shiftToCircle = ->
+  player.mode = 'circle'
+  return
+
+shiftToTriangle = ->
+  player.mode = 'triangle'
+  return
