@@ -328,6 +328,12 @@ processTriangleMovement = ->
   player.vx += dvx
   player.vy += dvy
 
+  # clamp to max speed
+  speed = Math.sqrt(player.vx**2 + player.vy**2)
+  if speed > triangleMaxSpeed
+    player.vx *= triangleMaxSpeed / speed
+    player.vy *= triangleMaxSpeed / speed
+
   movePlayerByVel()
 
   return
