@@ -634,8 +634,10 @@ collideBulletsAndEnemies = ->
                                          enemy.radius*2, enemy.radius*2)
     for bullet, bi in bullets
       if testShape.contains bullet.x, bullet.y
-        spent.push bi
-        dead.push ei
+        if bi not in spent
+          spent.push bi
+        if ei not in dead
+          dead.push ei
 
   # remove dead
   i = dead.length
