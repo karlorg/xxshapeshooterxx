@@ -137,8 +137,8 @@ createWeapons = ->
     weapon = {
       active: false
       energy: 100
-      drain: 100 / 60
-      recharge: 40 / 60
+      drain: 50 / 60
+      recharge: 20 / 60
       cooling: false
     }
     weapons[name] = weapon
