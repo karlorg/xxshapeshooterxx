@@ -37,11 +37,15 @@ preload = ->
 create = ->
   cursors = game.input.keyboard.createCursorKeys()
   keys = game.input.keyboard.addKeys
-    bomb: Phaser.KeyCode.X
-    whip: Phaser.KeyCode.Z
+    left: Phaser.KeyCode.A
+    right: Phaser.KeyCode.S
+    up: Phaser.KeyCode.W
+    down: Phaser.KeyCode.R
   game.input.keyboard.addKeyCapture [
-    Phaser.KeyCode.X
-    Phaser.KeyCode.Z
+    Phaser.KeyCode.A
+    Phaser.KeyCode.R
+    Phaser.KeyCode.S
+    Phaser.KeyCode.W
     Phaser.KeyCode.UP
     Phaser.KeyCode.DOWN
     Phaser.KeyCode.LEFT
@@ -155,16 +159,21 @@ fire = ->
   shield.active = true
   return
 
+playerSaysLeft = -> cursors.left.isDown or keys.left.isDown
+playerSaysRight = -> cursors.right.isDown or keys.right.isDown
+playerSaysUp = -> cursors.up.isDown or keys.up.isDown
+playerSaysDown = -> cursors.down.isDown or keys.down.isDown
+
 processPlayerMovement = ->
   processCircleMovement()
 
 processCircleMovement = ->
   targetvx = 0
-  if cursors.left.isDown then targetvx -= circleSpeed
-  if cursors.right.isDown then targetvx += circleSpeed
+  if playerSaysLeft() then targetvx -= circleSpeed
+  if playerSaysRight() then targetvx += circleSpeed
   targetvy = 0
-  if cursors.up.isDown then targetvy -= circleSpeed
-  if cursors.down.isDown then targetvy += circleSpeed
+  if playerSaysUp() then targetvy -= circleSpeed
+  if playerSaysDown() then targetvy += circleSpeed
 
   if targetvx != 0 and targetvy != 0
     # divide by root 2 so that total speed is still circleSpeed
