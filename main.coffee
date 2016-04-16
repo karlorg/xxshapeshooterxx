@@ -3,6 +3,7 @@
 arenaBounds = { left: 8, right: 592, top: 8, bottom: 592 }
 arenaWidth = arenaBounds.right - arenaBounds.left
 arenaHeight = arenaBounds.bottom - arenaBounds.top
+bulletSpeed = 600 / 60
 circleInertia = 0.8
 circleSpeed = 300 / 60
 circleDiameter = 30
@@ -20,6 +21,7 @@ triangleAccel = 30 / 60
 triangleMaxSpeed = 600 / 60
 triangleTurnRate = (tau/2) / 60
 
+bullets = []
 cursors = null
 enemies = []
 game = null
@@ -75,7 +77,7 @@ create = ->
     y: 500
     vx: 0
     vy: 0
-    angle: 0
+    angle: 0  # clockwise from top
   }
 
   shield = {
@@ -95,6 +97,7 @@ update = ->
   processEnemyMovement()
   processShapeshiftKeys()
   processPlayerMovement()
+  processBulletMovement()
 
   enemiesToKill = []
   for enemy, i in enemies
@@ -106,6 +109,8 @@ update = ->
   while i > 0
     i -= 1
     enemies.splice enemiesToKill[i], 1
+
+  collideBulletsAndEnemies()
 
   draw()
   return
@@ -120,6 +125,7 @@ draw = ->
   drawPlayer()
   drawEnemies()
   drawShield()
+  drawBullets()
   return
 
 toScreen = (x, y) ->
@@ -200,6 +206,15 @@ drawDrifter = (drifter) ->
   graphics.endFill()
   return
 
+drawBullets = ->
+  graphics.lineStyle 0
+  for bullet in bullets
+    graphics.beginFill shieldColor, 1.0
+    {x, y} = toScreen bullet.x, bullet.y
+    graphics.drawRect x, y, 2, 2
+    graphics.endFill()
+  return
+
 drawShield = ->
   return unless shield.active
   graphics.lineStyle 2, shieldColor, 0.8
@@ -208,8 +223,21 @@ drawShield = ->
   return
 
 fire = ->
-  shield.active = true
+  switch player.mode
+    when 'circle'
+      shield.active = true
+    when 'triangle'
+      shootTriangle()
   return
+
+shootTriangle = ->
+  bullet = {
+    x: player.x
+    y: player.y
+    angle: player.angle
+  }
+  bullets.push bullet
+  return bullet
 
 playerSaysLeft = -> cursors.left.isDown or keys.left.isDown
 playerSaysRight = -> cursors.right.isDown or keys.right.isDown
@@ -312,6 +340,45 @@ processDrifterMovement = (drifter) ->
   if drifter.y + drifterDiameter*0.5 > 1000
     drifter.y = 1000 - drifterDiameter*0.5
     drifter.vy *= -1
+
+  return
+
+processBulletMovement = ->
+  spent = []
+  for bullet, i in bullets
+    bullet.x += bulletSpeed * Math.sin bullet.angle
+    bullet.y -= bulletSpeed * Math.cos bullet.angle
+    if (bullet.x <= 0 or bullet.x >= 1000 or
+        bullet.y <= 0 or bullet.y >= 1000)
+      spent.push i
+  # remove spent
+  i = spent.length
+  while i > 0
+    i -= 1
+    bullets.splice spent[i], 1
+  return
+
+collideBulletsAndEnemies = ->
+  spent = []
+  dead = []
+  for enemy, ei in enemies
+    testCircle = new Phaser.Circle enemy.x, enemy.y, enemy.radius
+    for bullet, bi in bullets
+      if testCircle.contains bullet.x, bullet.y
+        spent.push bi
+        dead.push ei
+
+  # remove dead
+  i = dead.length
+  while i > 0
+    i -= 1
+    enemies.splice dead[i], 1
+
+  # remove spent
+  i = spent.length
+  while i > 0
+    i -= 1
+    bullets.splice spent[i], 1
 
   return
 
