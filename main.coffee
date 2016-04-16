@@ -622,9 +622,15 @@ collideBulletsAndEnemies = ->
   spent = []
   dead = []
   for enemy, ei in enemies
-    testCircle = new Phaser.Circle enemy.x, enemy.y, enemy.radius * 2
+    switch enemy.bodytype
+      when 'circle'
+        testShape = new Phaser.Circle enemy.x, enemy.y, enemy.radius * 2
+      when 'square'
+        testShape = new Phaser.Rectangle(enemy.x-enemy.radius,
+                                         enemy.y-enemy.radius,
+                                         enemy.radius*2, enemy.radius*2)
     for bullet, bi in bullets
-      if testCircle.contains bullet.x, bullet.y
+      if testShape.contains bullet.x, bullet.y
         spent.push bi
         dead.push ei
 
@@ -655,6 +661,7 @@ spawnEnemy = (type) ->
 spawnDrifter = ->
   enemy = {
     type: 'drifter'
+    bodytype: 'circle'
   }
   {x, y} = getEnemySpawnPoint()
   enemy.x = x
@@ -670,6 +677,7 @@ spawnDrifter = ->
 spawnStrafer = ->
   enemy = {
     type: 'strafer'
+    bodytype: 'circle'
   }
   {x, y} = getEnemySpawnPoint()
   enemy.x = x
@@ -681,7 +689,10 @@ spawnStrafer = ->
   return enemy
 
 spawnCharger = ->
-  enemy = { type: 'charger' }
+  enemy = {
+    type: 'charger'
+    bodytype: 'square'
+  }
   {x, y} = getChargerSpawnPoint()
   enemy.x = x
   enemy.y = y
@@ -730,16 +741,48 @@ killPlayer = ->
   return
 
 enemyTouchingShield = (enemy) ->
-  doCirclesIntersect enemy.x, enemy.y, enemy.radius,
-                     player.x, player.y, shieldDiameter / 2
+  switch enemy.bodytype
+    when 'circle'
+      doCirclesIntersect enemy.x, enemy.y, enemy.radius,
+                         player.x, player.y, shieldDiameter / 2
+    when 'square'
+      left = enemy.x - enemy.diameter / 2
+      right = enemy.x + enemy.diameter / 2
+      top = enemy.y - enemy.diameter / 2
+      bottom = enemy.y + enemy.diameter / 2
+      doesCircleTouchSquare player.x, player.y, shieldDiameter / 2,
+                            {left, right, top, bottom}
 
 enemyTouchingPlayer = (enemy) ->
-  doCirclesIntersect enemy.x, enemy.y, enemy.radius,
-                     player.x, player.y, circleDiameter / 2
+  switch enemy.bodytype
+    when 'circle'
+      doCirclesIntersect enemy.x, enemy.y, enemy.radius,
+                         player.x, player.y, shieldDiameter / 2
+    when 'square'
+      left = enemy.x - enemy.diameter / 2
+      right = enemy.x + enemy.diameter / 2
+      top = enemy.y - enemy.diameter / 2
+      bottom = enemy.y + enemy.diameter / 2
+      doesCircleTouchSquare player.x, player.y, circleDiameter / 2,
+                            {left, right, top, bottom}
 
 doCirclesIntersect = (x0, y0, r0, x1, y1, r1) ->
   distSq = (x0-x1)**2 + (y0-y1)**2
   return distSq <= (r0+r1)**2
+
+doesCircleTouchSquare = (x, y, r, {left, right, top, bottom}) ->
+  # http://stackoverflow.com/questions/21089959/detecting-collision-of-rectangle-with-circle
+  half = {x: (right-left)/2, y: (bottom-top)/2}
+  center = {x: x - (left+half.x), y: y - (top+half.y)}
+  side = {x: Math.abs(center.x) - half.x, y: Math.abs(center.y) - half.y}
+  if side.x > r or side.y > r  # outside
+    return false
+  if side.x < -r or side.y < -r  # inside
+    return true
+  if side.x < 0 or side.y < 0  # intersects side or corner
+    return true
+  # circle is near the corner
+  return side.x**2 + side.y**2 < r**2
 
 shiftToCircle = ->
   player.mode = 'circle'
