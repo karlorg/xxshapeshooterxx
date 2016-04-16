@@ -296,8 +296,11 @@ drawStrafer = (strafer) ->
 drawCharger = (charger) ->
   graphics.lineStyle 0
   graphics.beginFill chargerColor, 1.0
-  {x, y} = toScreen charger.x, charger.y
-  graphics.drawRect x, y, charger.radius*2, charger.radius*2
+  left = charger.x - charger.radius
+  top = charger.y - charger.radius
+  {x, y} = toScreen left, top
+  width = distToScreen (charger.radius*2)
+  graphics.drawRect x, y, width, width
   graphics.endFill()
   return
 
@@ -746,10 +749,10 @@ enemyTouchingShield = (enemy) ->
       doCirclesIntersect enemy.x, enemy.y, enemy.radius,
                          player.x, player.y, shieldDiameter / 2
     when 'square'
-      left = enemy.x - enemy.diameter / 2
-      right = enemy.x + enemy.diameter / 2
-      top = enemy.y - enemy.diameter / 2
-      bottom = enemy.y + enemy.diameter / 2
+      left = enemy.x - enemy.radius
+      right = enemy.x + enemy.radius
+      top = enemy.y - enemy.radius
+      bottom = enemy.y + enemy.radius
       doesCircleTouchSquare player.x, player.y, shieldDiameter / 2,
                             {left, right, top, bottom}
 
@@ -759,10 +762,10 @@ enemyTouchingPlayer = (enemy) ->
       doCirclesIntersect enemy.x, enemy.y, enemy.radius,
                          player.x, player.y, shieldDiameter / 2
     when 'square'
-      left = enemy.x - enemy.diameter / 2
-      right = enemy.x + enemy.diameter / 2
-      top = enemy.y - enemy.diameter / 2
-      bottom = enemy.y + enemy.diameter / 2
+      left = enemy.x - enemy.radius
+      right = enemy.x + enemy.radius
+      top = enemy.y - enemy.radius
+      bottom = enemy.y + enemy.radius
       doesCircleTouchSquare player.x, player.y, circleDiameter / 2,
                             {left, right, top, bottom}
 
