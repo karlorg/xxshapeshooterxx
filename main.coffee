@@ -4,8 +4,8 @@ arenaBounds = { left: 8, right: 592, top: 8, bottom: 592 }
 arenaWidth = arenaBounds.right - arenaBounds.left
 arenaHeight = arenaBounds.bottom - arenaBounds.top
 bulletSpeed = 600 / 60
-circleInertia = 0.8
-circleSpeed = 300 / 60
+circleInertia = 0.85
+circleSpeed = 200 / 60
 circleDiameter = 30
 drifterDiameter = 40
 drifterSpeed = 250 / 60
@@ -29,6 +29,7 @@ graphics = null
 keys = null
 player = null
 shield = null
+triangleShots = null
 
 window.onload = ->
   game = new Phaser.Game scrW, scrH, Phaser.AUTO, '', {
@@ -82,6 +83,16 @@ create = ->
 
   shield = {
     active: false
+    energy: 100
+    drain: 50 / 60
+    recharge: 25 / 60
+  }
+
+  triangleShots = {
+    active: false
+    energy: 100
+    drain: 50 / 60
+    recharge: 25 / 60
   }
 
   return
@@ -90,9 +101,8 @@ update = ->
   if game.rnd.frac() < enemySpawnChance
     spawnEnemy()
 
-  shield.active = false
-  if game.input.activePointer.leftButton.isDown
-    fire()
+  processWeaponFire()
+  processWeaponEnergy()
 
   processEnemyMovement()
   processShapeshiftKeys()
@@ -126,6 +136,7 @@ draw = ->
   drawEnemies()
   drawShield()
   drawBullets()
+  drawEnergyLevels()
   return
 
 toScreen = (x, y) ->
@@ -222,12 +233,21 @@ drawShield = ->
   graphics.drawCircle x, y, distToScreen(shieldDiameter)
   return
 
+drawEnergyLevels = ->
+  graphics.lineStyle 4, shieldColor, 1.0
+  graphics.moveTo 620, 20
+  graphics.lineTo 620+(shield.energy*160*0.01), 20
+  graphics.moveTo 620, 40
+  graphics.lineTo 620+(triangleShots.energy*160*0.01), 40
+
 fire = ->
   switch player.mode
     when 'circle'
-      shield.active = true
+      if shield.energy > 0
+        shield.active = true
     when 'triangle'
-      shootTriangle()
+      if triangleShots.energy > 0
+        shootTriangle()
   return
 
 shootTriangle = ->
@@ -318,6 +338,38 @@ movePlayerByVel = ->
     player.y = 1000 - circleDiameter*0.5
     player.vy = 0
 
+  return
+
+processWeaponFire = ->
+  weapon = switch player.mode
+    when 'circle' then shield
+    when 'triangle' then triangleShots
+    else throw new Error "unknown mode: #{player.mode}"
+  if game.input.activePointer.leftButton.isDown
+    if weapon.active  # was on last frame
+      # only shut down if out of energy
+      if weapon.energy <= 0
+        weapon.active = false
+    else  # was not on last frame
+      # require 50% energy to fire
+      if weapon.energy >= 50
+        weapon.active = true
+  else  # fire button not pressed
+    weapon.active = false
+  if weapon.active
+    fire()
+  return
+
+processWeaponEnergy = ->
+  for weapon in [shield, triangleShots]
+    if weapon.active
+      weapon.energy -= weapon.drain
+      if weapon.energy < 0
+        weapon.energy = 0
+    else
+      weapon.energy += weapon.recharge
+      if weapon.energy > 100
+        weapon.energy = 100
   return
 
 processEnemyMovement = ->
@@ -419,8 +471,10 @@ doCirclesIntersect = (x0, y0, r0, x1, y1, r1) ->
 
 shiftToCircle = ->
   player.mode = 'circle'
+  triangleShots.active = false
   return
 
 shiftToTriangle = ->
   player.mode = 'triangle'
+  shield.active = false
   return
