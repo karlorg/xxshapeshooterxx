@@ -7,6 +7,7 @@ bulletSpeed = 600 / 60
 circleInertia = 0.85
 circleSpeed = 200 / 60
 circleDiameter = 30
+coolingRecovery = 35  # % of energy needed before cooldown expires
 drifterDiameter = 40
 drifterSpeed = 250 / 60
 enemyColor = 0xed4588
@@ -123,6 +124,7 @@ createWeapons = ->
       energy: 100
       drain: 100 / 60
       recharge: 40 / 60
+      cooling: false
     }
     weapons[name] = weapon
   return
@@ -232,11 +234,13 @@ drawShield = ->
   return
 
 drawEnergyLevels = ->
-  graphics.lineStyle 4, weaponColor, 1.0
-  graphics.moveTo 620, 20
-  graphics.lineTo 620+(weapons.circle.energy*160*0.01), 20
-  graphics.moveTo 620, 40
-  graphics.lineTo 620+(weapons.triangle.energy*160*0.01), 40
+  y = 0
+  for own name, weapon of weapons
+    y += 20
+    color = if weapon.cooling then enemyColor else weaponColor
+    graphics.lineStyle 4, color, 1.0
+    graphics.moveTo 620, y
+    graphics.lineTo 620+(weapon.energy*160*0.01), y
 
 fire = ->
   switch player.mode
@@ -342,16 +346,10 @@ processWeaponFire = ->
   unless player.mode of weapons
     throw new Error "unknown mode: #{player.mode}"
   weapon = weapons[player.mode]
-  if game.input.activePointer.leftButton.isDown
-    if weapon.active  # was on last frame
-      # only shut down if out of energy
-      if weapon.energy <= 0
-        weapon.active = false
-    else  # was not on last frame
-      # require 50% energy to fire
-      if weapon.energy >= 50
-        weapon.active = true
-  else  # fire button not pressed
+  if game.input.activePointer.leftButton.isDown and not weapon.cooling
+    if weapon.energy >= 0
+      weapon.active = true
+  else
     weapon.active = false
   if weapon.active
     fire()
@@ -363,10 +361,13 @@ processWeaponEnergy = ->
       weapon.energy -= weapon.drain
       if weapon.energy < 0
         weapon.energy = 0
+        weapon.cooling = true
     else
       weapon.energy += weapon.recharge
       if weapon.energy > 100
         weapon.energy = 100
+      if weapon.energy >= coolingRecovery
+        weapon.cooling = false
   return
 
 processEnemyMovement = ->
