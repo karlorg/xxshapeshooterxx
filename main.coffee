@@ -6,6 +6,11 @@ arenaHeight = arenaBounds.bottom - arenaBounds.top
 circleInertia = 0.8
 circleSpeed = 300 / 60
 circleDiameter = 30
+drifterDiameter = 40
+drifterSpeed = 250 / 60
+enemyColor = 0xed4588
+enemySpawnChance = 0.01
+playerColor = 0xffff0b
 scrW = 800
 scrH = 600
 shieldColor = 0x22ddff
@@ -13,6 +18,7 @@ shieldDiameter = 50
 tau = 2 * Math.PI
 
 cursors = null
+enemies = []
 game = null
 graphics = null
 keys = null
@@ -49,10 +55,12 @@ create = ->
 
   player = {
     mode: 'circle'
+    alive: true
     x: 500
     y: 500
     vx: 0
     vy: 0
+    angle: 0
   }
 
   shield = {
@@ -62,11 +70,26 @@ create = ->
   return
 
 update = ->
+  if game.rnd.frac() < enemySpawnChance
+    spawnEnemy()
+
   shield.active = false
   if game.input.activePointer.leftButton.isDown
     fire()
 
+  processEnemyMovement()
   processPlayerMovement()
+
+  enemiesToKill = []
+  for enemy, i in enemies
+    if shield.active and enemyTouchingShield enemy
+      enemiesToKill.push i
+    else if enemyTouchingPlayer enemy
+      killPlayer()
+  i = enemiesToKill.length
+  while i > 0
+    i -= 1
+    enemies.splice enemiesToKill[i], 1
 
   draw()
   return
@@ -79,6 +102,7 @@ draw = ->
   graphics.clear()
   drawArenaBounds()
   drawPlayer()
+  drawEnemies()
   drawShield()
   return
 
@@ -97,10 +121,26 @@ drawArenaBounds = ->
   return
 
 drawPlayer = ->
+  return unless player.alive
   graphics.lineStyle 0
-  graphics.beginFill 0xffff0b, 1.0
+  graphics.beginFill playerColor, 1.0
   {x, y} = toScreen player.x, player.y
   graphics.drawCircle x, y, distToScreen(circleDiameter)
+  graphics.endFill()
+  return
+
+drawEnemies = ->
+  for enemy in enemies
+    drawEnemy enemy
+
+drawEnemy = (enemy) ->
+  drawDrifter enemy
+
+drawDrifter = (drifter) ->
+  graphics.lineStyle 0
+  graphics.beginFill enemyColor, 1.0
+  {x, y} = toScreen drifter.x, drifter.y
+  graphics.drawCircle x, y, distToScreen(drifterDiameter)
   graphics.endFill()
   return
 
@@ -116,6 +156,9 @@ fire = ->
   return
 
 processPlayerMovement = ->
+  processCircleMovement()
+
+processCircleMovement = ->
   targetvx = 0
   if cursors.left.isDown then targetvx -= circleSpeed
   if cursors.right.isDown then targetvx += circleSpeed
@@ -130,6 +173,9 @@ processPlayerMovement = ->
 
   player.vx = circleInertia * player.vx + (1-circleInertia) * targetvx
   player.vy = circleInertia * player.vy + (1-circleInertia) * targetvy
+
+  player.angle = Math.atan2 player.vx, player.vy
+
   player.x += player.vx
   player.y += player.vy
 
@@ -141,3 +187,61 @@ processPlayerMovement = ->
     player.y = 1000 - circleDiameter*0.5
 
   return
+
+processEnemyMovement = ->
+  for enemy in enemies
+    processDrifterMovement enemy
+
+processDrifterMovement = (drifter) ->
+  drifter.x += drifter.vx
+  drifter.y += drifter.vy
+
+  if drifter.x - drifterDiameter*0.5 < 0
+    drifter.x = drifterDiameter*0.5
+    drifter.vx *= -1
+  if drifter.x + drifterDiameter*0.5 > 1000
+    drifter.x = 1000 - drifterDiameter*0.5
+    drifter.vx *= -1
+  if drifter.y - drifterDiameter*0.5 < 0
+    drifter.y = drifterDiameter*0.5
+    drifter.vy *= -1
+  if drifter.y + drifterDiameter*0.5 > 1000
+    drifter.y = 1000 - drifterDiameter*0.5
+    drifter.vy *= -1
+
+  return
+
+spawnEnemy = ->
+  enemy = {
+    type: 'drifter'
+  }
+  x = null
+  until x != null and Math.abs(x-player.x) > 200
+    x = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  y = null
+  until y != null and Math.abs(y-player.y) > 200
+    y = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  enemy.x = x
+  enemy.y = y
+  angle = game.rnd.realInRange 0, tau
+  enemy.vx = drifterSpeed * Math.cos angle
+  enemy.vy = drifterSpeed * Math.sin angle
+  enemy.radius = drifterDiameter / 2
+  enemies.push enemy
+  return enemy
+
+killPlayer = ->
+  player.alive = false
+  return
+
+enemyTouchingShield = (enemy) ->
+  doCirclesIntersect enemy.x, enemy.y, enemy.radius,
+                     player.x, player.y, shieldDiameter / 2
+
+enemyTouchingPlayer = (enemy) ->
+  doCirclesIntersect enemy.x, enemy.y, enemy.radius,
+                     player.x, player.y, circleDiameter / 2
+
+doCirclesIntersect = (x0, y0, r0, x1, y1, r1) ->
+  distSq = (x0-x1)**2 + (y0-y1)**2
+  return distSq <= (r0+r1)**2
