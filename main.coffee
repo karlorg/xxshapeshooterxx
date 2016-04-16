@@ -113,7 +113,7 @@ update = ->
   return
 
 render = ->
-  game.debug.text "#{weapons.circle.energy}", 0, 500
+  # game.debug.text "#{weapons.circle.energy}", 0, 500
   return
 
 createWeapons = ->
@@ -121,8 +121,8 @@ createWeapons = ->
     weapon = {
       active: false
       energy: 100
-      drain: 50 / 60
-      recharge: 25 / 60
+      drain: 100 / 60
+      recharge: 40 / 60
     }
     weapons[name] = weapon
   return
@@ -372,6 +372,7 @@ processWeaponEnergy = ->
 processEnemyMovement = ->
   for enemy in enemies
     processDrifterMovement enemy
+  return
 
 processDrifterMovement = (drifter) ->
   drifter.x += drifter.vx
