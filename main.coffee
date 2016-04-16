@@ -10,6 +10,7 @@ circleDiameter = 30
 coolingRecovery = 35  # % of energy needed before cooldown expires
 drifterDiameter = 40
 drifterSpeed = 250 / 60
+drifterColor = 0xed4588
 enemyColor = 0xed4588
 enemySpawnChance = 0.01
 playerColor = 0xffff0b
@@ -212,8 +213,16 @@ drawEnemy = (enemy) ->
 drawDrifter = (drifter) ->
   graphics.lineStyle 0
   graphics.beginFill enemyColor, 1.0
-  {x, y} = toScreen drifter.x, drifter.y
-  graphics.drawCircle x, y, distToScreen(drifterDiameter)
+  shape = [[1,1], [0.6, 0],[1,-1],[0, -0.6],
+           [-1,-1], [-0.6, 0], [-1, 1], [0, 0.6]]
+  for point in shape
+    point[0] *= drifter.radius
+    point[1] *= drifter.radius
+  {x, y} = toScreen shape[7][0]+drifter.x, shape[7][1]+drifter.y
+  graphics.moveTo x, y
+  for [px, py] in shape
+    {x, y} = toScreen px+drifter.x, py+drifter.y
+    graphics.lineTo x, y
   graphics.endFill()
   return
 
