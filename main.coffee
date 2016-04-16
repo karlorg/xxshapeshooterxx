@@ -29,6 +29,8 @@ tau = 2 * Math.PI
 triangleAccel = 30 / 60
 triangleMaxSpeed = 600 / 60
 triangleTurnRate = (tau/2) / 60
+waveDelay = 7000
+waveSpawnDelay = 250
 weaponColor = 0x22ddff
 
 bullets = []
@@ -93,16 +95,13 @@ create = ->
   }
 
   createWeapons()
+  startRandomWave()
 
   return
 
 update = ->
-  if game.rnd.frac() < enemySpawnChance
-    spawnEnemy()
-
   processWeaponFire()
   processWeaponEnergy()
-
   processEnemyMovement()
   processEnemyFire()
   processShapeshiftKeys()
@@ -130,6 +129,27 @@ update = ->
 
 render = ->
   # game.debug.text "#{weapons.circle.energy}", 0, 500
+  return
+
+startRandomWave = ->
+  num = game.rnd.frac()
+  if num < 0.5
+    startWave [{count: 10, type: 'drifter'}]
+  else
+    startWave [{count: 3, type: 'strafer'},
+               {count: 3, type: 'drifter'}]
+
+  game.time.events.add waveDelay, startRandomWave
+  return
+
+startWave = (spec) ->
+  time = 0
+  mkSpawner = (t) ->
+    -> spawnEnemy t
+  for {count, type} in spec
+    for i in [0...count]
+      game.time.events.add time, mkSpawner(type)
+      time += waveSpawnDelay
   return
 
 createWeapons = ->
@@ -593,11 +613,18 @@ collideBulletsAndEnemies = ->
 
   return
 
-spawnEnemy = ->
-  if game.rnd.frac() < 0.5
-    spawnDrifter()
-  else
-    spawnStrafer()
+spawnEnemy = (type) ->
+  if type == null
+    num = game.rnd.frac()
+    if num < 0.5
+      type = 'drifter'
+    else
+      type = 'strafer'
+  switch type
+    when 'drifter'
+      spawnDrifter()
+    when 'strafer'
+      spawnStrafer()
   return
 
 spawnDrifter = ->
