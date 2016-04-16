@@ -30,6 +30,7 @@ game = null
 graphics = null
 keys = null
 player = null
+thrustParticles = []
 weapons = {}
 
 window.onload = ->
@@ -96,6 +97,8 @@ update = ->
   processEnemyMovement()
   processShapeshiftKeys()
   processPlayerMovement()
+  # addPlayerThrust()
+  processThrustParticles()
   processBulletMovement()
 
   enemiesToKill = []
@@ -133,6 +136,7 @@ createWeapons = ->
 draw = ->
   graphics.clear()
   drawArenaBounds()
+  drawThrustParticles()
   drawPlayer()
   drawEnemies()
   drawShield()
@@ -152,6 +156,15 @@ drawArenaBounds = ->
   width = right - left
   height = bottom - top
   graphics.drawRect left, top, width, height
+  return
+
+drawThrustParticles = ->
+  graphics.lineStyle 0
+  for particle in thrustParticles
+    graphics.beginFill weaponColor, 1.0
+    {x, y} = toScreen particle.x, particle.y
+    graphics.drawRect x, y, 2, 2
+    graphics.endFill()
   return
 
 drawPlayer = ->
@@ -407,6 +420,31 @@ processDrifterMovement = (drifter) ->
     drifter.y = 1000 - drifterDiameter*0.5
     drifter.vy *= -1
 
+  return
+
+addPlayerThrust = ->
+  speed = Math.sqrt(player.vx**2 + player.vy**2)
+  chance = 0.1 + speed * (200 / 60) * 0.8
+  chance = game.math.clamp chance, 0, 1
+  if game.rnd.frac() < chance
+    xoff = - circleDiameter * 0.25 * Math.sin player.angle
+    yoff = circleDiameter * 0.25 * Math.cos player.angle
+    particle = {
+      x: player.x + xoff
+      y: player.y + yoff
+      vx: xoff + game.rnd.realInRange -1, 1
+      vy: yoff + game.rnd.realInRange -1, 1
+    }
+    thrustParticles.push particle
+    game.time.events.add 200, ->
+      if thrustParticles.length > 0
+        thrustParticles.splice thrustParticles.length-1, 1
+  return
+
+processThrustParticles = ->
+  for particle in thrustParticles
+    particle.x += particle.vx
+    particle.y += particle.vy
   return
 
 processBulletMovement = ->
