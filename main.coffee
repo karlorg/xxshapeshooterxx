@@ -14,12 +14,12 @@ enemySpawnChance = 0.01
 playerColor = 0xffff0b
 scrW = 800
 scrH = 600
-shieldColor = 0x22ddff
 shieldDiameter = 50
 tau = 2 * Math.PI
 triangleAccel = 30 / 60
 triangleMaxSpeed = 600 / 60
 triangleTurnRate = (tau/2) / 60
+weaponColor = 0x22ddff
 
 bullets = []
 cursors = null
@@ -28,8 +28,7 @@ game = null
 graphics = null
 keys = null
 player = null
-shield = null
-triangleShots = null
+weapons = {}
 
 window.onload = ->
   game = new Phaser.Game scrW, scrH, Phaser.AUTO, '', {
@@ -81,19 +80,7 @@ create = ->
     angle: 0  # clockwise from top
   }
 
-  shield = {
-    active: false
-    energy: 100
-    drain: 50 / 60
-    recharge: 25 / 60
-  }
-
-  triangleShots = {
-    active: false
-    energy: 100
-    drain: 50 / 60
-    recharge: 25 / 60
-  }
+  createWeapons()
 
   return
 
@@ -111,7 +98,7 @@ update = ->
 
   enemiesToKill = []
   for enemy, i in enemies
-    if shield.active and enemyTouchingShield enemy
+    if weapons.circle.active and enemyTouchingShield enemy
       enemiesToKill.push i
     else if enemyTouchingPlayer enemy
       killPlayer()
@@ -126,7 +113,18 @@ update = ->
   return
 
 render = ->
-  # game.debug.text "#{player.angle / tau}", 0, 500
+  game.debug.text "#{weapons.circle.energy}", 0, 500
+  return
+
+createWeapons = ->
+  for name in ['circle', 'triangle']
+    weapon = {
+      active: false
+      energy: 100
+      drain: 50 / 60
+      recharge: 25 / 60
+    }
+    weapons[name] = weapon
   return
 
 draw = ->
@@ -220,33 +218,33 @@ drawDrifter = (drifter) ->
 drawBullets = ->
   graphics.lineStyle 0
   for bullet in bullets
-    graphics.beginFill shieldColor, 1.0
+    graphics.beginFill weaponColor, 1.0
     {x, y} = toScreen bullet.x, bullet.y
     graphics.drawRect x, y, 2, 2
     graphics.endFill()
   return
 
 drawShield = ->
-  return unless shield.active
-  graphics.lineStyle 2, shieldColor, 0.8
+  return unless weapons.circle.active
+  graphics.lineStyle 2, weaponColor, 0.8
   {x, y} = toScreen player.x, player.y
   graphics.drawCircle x, y, distToScreen(shieldDiameter)
   return
 
 drawEnergyLevels = ->
-  graphics.lineStyle 4, shieldColor, 1.0
+  graphics.lineStyle 4, weaponColor, 1.0
   graphics.moveTo 620, 20
-  graphics.lineTo 620+(shield.energy*160*0.01), 20
+  graphics.lineTo 620+(weapons.circle.energy*160*0.01), 20
   graphics.moveTo 620, 40
-  graphics.lineTo 620+(triangleShots.energy*160*0.01), 40
+  graphics.lineTo 620+(weapons.triangle.energy*160*0.01), 40
 
 fire = ->
   switch player.mode
     when 'circle'
-      if shield.energy > 0
-        shield.active = true
+      if weapons.circle.energy > 0
+        weapons.circle.active = true
     when 'triangle'
-      if triangleShots.energy > 0
+      if weapons.triangle.energy > 0
         shootTriangle()
   return
 
@@ -341,10 +339,9 @@ movePlayerByVel = ->
   return
 
 processWeaponFire = ->
-  weapon = switch player.mode
-    when 'circle' then shield
-    when 'triangle' then triangleShots
-    else throw new Error "unknown mode: #{player.mode}"
+  unless player.mode of weapons
+    throw new Error "unknown mode: #{player.mode}"
+  weapon = weapons[player.mode]
   if game.input.activePointer.leftButton.isDown
     if weapon.active  # was on last frame
       # only shut down if out of energy
@@ -361,7 +358,7 @@ processWeaponFire = ->
   return
 
 processWeaponEnergy = ->
-  for weapon in [shield, triangleShots]
+  for own name, weapon of weapons
     if weapon.active
       weapon.energy -= weapon.drain
       if weapon.energy < 0
@@ -471,10 +468,10 @@ doCirclesIntersect = (x0, y0, r0, x1, y1, r1) ->
 
 shiftToCircle = ->
   player.mode = 'circle'
-  triangleShots.active = false
+  weapons.triangle.active = false
   return
 
 shiftToTriangle = ->
   player.mode = 'triangle'
-  shield.active = false
+  weapons.circle.active = false
   return
