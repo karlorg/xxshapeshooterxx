@@ -412,7 +412,7 @@ collideBulletsAndEnemies = ->
   spent = []
   dead = []
   for enemy, ei in enemies
-    testCircle = new Phaser.Circle enemy.x, enemy.y, enemy.radius
+    testCircle = new Phaser.Circle enemy.x, enemy.y, enemy.radius * 2
     for bullet, bi in bullets
       if testCircle.contains bullet.x, bullet.y
         spent.push bi
