@@ -4,6 +4,11 @@ arenaBounds = { left: 8, right: 592, top: 8, bottom: 592 }
 arenaWidth = arenaBounds.right - arenaBounds.left
 arenaHeight = arenaBounds.bottom - arenaBounds.top
 bulletSpeed = 600 / 60
+chargerColor = 0xe36912
+chargerDiameter = 35
+chargerInertia = 0.98
+chargerSpawnDistance = 350
+chargerSpeed = 450/60
 circleInertia = 0.85
 circleSpeed = 200 / 60
 circleDiameter = 30
@@ -133,11 +138,13 @@ render = ->
 
 startRandomWave = ->
   num = game.rnd.frac()
-  if num < 0.5
-    startWave [{count: 10, type: 'drifter'}]
-  else
-    startWave [{count: 3, type: 'strafer'},
-               {count: 3, type: 'drifter'}]
+  if num < 0.4
+     startWave [{count: 10, type: 'drifter'}]
+   else if num < 0.7
+     startWave [{count: 3, type: 'strafer'},
+                {count: 3, type: 'drifter'}]
+   else
+     startWave [{count: 12, type: 'charger', interval: 250/12}]
 
   game.time.events.add waveDelay, startRandomWave
   return
@@ -146,10 +153,10 @@ startWave = (spec) ->
   time = 0
   mkSpawner = (t) ->
     -> spawnEnemy t
-  for {count, type} in spec
+  for {count, type, interval} in spec
     for i in [0...count]
       game.time.events.add time, mkSpawner(type)
-      time += waveSpawnDelay
+      time += interval ? waveSpawnDelay
   return
 
 createWeapons = ->
@@ -258,6 +265,8 @@ drawEnemy = (enemy) ->
       drawDrifter enemy
     when 'strafer'
       drawStrafer enemy
+    when 'charger'
+      drawCharger enemy
   return
 
 drawDrifter = (drifter) ->
@@ -281,6 +290,14 @@ drawStrafer = (strafer) ->
   graphics.beginFill straferColor, 1.0
   {x, y} = toScreen strafer.x, strafer.y
   graphics.drawCircle x, y, distToScreen(straferDiameter)
+  graphics.endFill()
+  return
+
+drawCharger = (charger) ->
+  graphics.lineStyle 0
+  graphics.beginFill chargerColor, 1.0
+  {x, y} = toScreen charger.x, charger.y
+  graphics.drawRect x, y, charger.radius*2, charger.radius*2
   graphics.endFill()
   return
 
@@ -474,6 +491,8 @@ processEnemyMovement = ->
         processDrifterMovement enemy
       when 'strafer'
         processStraferMovement enemy
+      when 'charger'
+        processChargerMovement enemy
   return
 
 processDrifterMovement = (drifter) ->
@@ -503,6 +522,16 @@ processStraferMovement = (strafer) ->
     moveToPlayer strafer
   else
     circlePlayer strafer
+  return
+
+processChargerMovement = (charger) ->
+  targetvx = charger.speed * Math.sin charger.angle
+  targetvy = charger.speed * Math.cos charger.angle
+  charger.vx = chargerInertia * charger.vx + (1-chargerInertia) * targetvx
+  charger.vy = chargerInertia * charger.vy + (1-chargerInertia) * targetvy
+  bumped = not moveEntityByVel charger
+  if bumped
+    charger.angle += tau/2
   return
 
 runFromPlayer = (enemy) ->
@@ -614,17 +643,13 @@ collideBulletsAndEnemies = ->
   return
 
 spawnEnemy = (type) ->
-  if type == null
-    num = game.rnd.frac()
-    if num < 0.5
-      type = 'drifter'
-    else
-      type = 'strafer'
   switch type
     when 'drifter'
       spawnDrifter()
     when 'strafer'
       spawnStrafer()
+    when 'charger'
+      spawnCharger()
   return
 
 spawnDrifter = ->
@@ -655,6 +680,20 @@ spawnStrafer = ->
   enemies.push enemy
   return enemy
 
+spawnCharger = ->
+  enemy = { type: 'charger' }
+  {x, y} = getChargerSpawnPoint()
+  enemy.x = x
+  enemy.y = y
+  enemy.vx = 0
+  enemy.vy = 0
+  enemy.radius = chargerDiameter / 2
+  enemy.speed = chargerSpeed
+  angleToPlayer = Math.atan2 player.x-enemy.x, player.y-enemy.y
+  enemy.angle = angleToPlayer
+  enemies.push enemy
+  return enemy
+
 getEnemySpawnPoint = ->
   x = null
   until x != null and Math.abs(x-player.x) > 200
@@ -662,6 +701,28 @@ getEnemySpawnPoint = ->
   y = null
   until y != null and Math.abs(y-player.y) > 200
     y = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  return {x, y}
+
+chargerSpawnAngle = 0
+
+getChargerSpawnPoint = ->
+  retries = 10
+  ok = false
+  while retries > 0 and not ok
+    xoff = chargerSpawnDistance * Math.sin chargerSpawnAngle
+    yoff = chargerSpawnDistance * Math.cos chargerSpawnAngle
+    x = player.x + xoff
+    y = player.y + yoff
+    chargerSpawnAngle += tau/12
+    while chargerSpawnAngle > tau then chargerSpawnAngle -= tau
+    if (x > 0 and x < 1000 and y > 0 and y < 1000)
+      ok = true
+      break
+    else
+      retries -= 1
+      if retries == 0
+        return getEnemySpawnPoint()
+        break
   return {x, y}
 
 killPlayer = ->
