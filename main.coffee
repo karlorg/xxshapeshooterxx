@@ -363,28 +363,35 @@ processTriangleMovement = ->
     player.vx *= triangleMaxSpeed / speed
     player.vy *= triangleMaxSpeed / speed
 
-  movePlayerByVel()
+  moveEntityByVel player
 
   return
 
 moveEntityByVel = (entity) ->
+  # try to move in the direction indicated, bumping into walls
+  # if a wall is bumped return false, else true
   entity.x += entity.vx
   entity.y += entity.vy
 
+  bumped = false
   if entity.x - circleDiameter*0.5 < 0
     entity.x = circleDiameter*0.5
     entity.vx = 0
+    bumped = true
   if entity.x + circleDiameter*0.5 > 1000
     entity.x = 1000 - circleDiameter*0.5
     entity.vx = 0
+    bumped = true
   if entity.y - circleDiameter*0.5 < 0
     entity.y = circleDiameter*0.5
     entity.vy = 0
+    bumped = true
   if entity.y + circleDiameter*0.5 > 1000
     entity.y = 1000 - circleDiameter*0.5
     entity.vy = 0
+    bumped = true
 
-  return
+  return not bumped
 
 processWeaponFire = ->
   unless player.mode of weapons
@@ -444,11 +451,12 @@ processDrifterMovement = (drifter) ->
 
 processStraferMovement = (strafer) ->
   dist = Math.sqrt((strafer.x-player.x)**2 + (strafer.y-player.y)**2)
-  if dist < 250
+  if dist < 200
     runFromPlayer strafer
-  else if dist > 300
+  else if dist > 250
     moveToPlayer strafer
-  # circlePlayer strafer
+  else
+    circlePlayer strafer
   return
 
 runFromPlayer = (enemy) ->
@@ -463,6 +471,17 @@ moveToPlayer = (enemy) ->
   enemy.vx = enemy.speed * Math.sin angle
   enemy.vy = enemy.speed * Math.cos angle
   moveEntityByVel enemy
+  return
+
+circlePlayer = (enemy) ->
+  angleToPlayer = Math.atan2 player.x-enemy.x, player.y-enemy.y
+  success = false
+  angle = angleToPlayer + enemy.strafeDir * tau/4
+  enemy.vx = enemy.speed * Math.sin angle
+  enemy.vy = enemy.speed * Math.cos angle
+  success = moveEntityByVel enemy
+  if not success
+    enemy.strafeDir *= -1
   return
 
 addPlayerThrust = ->
@@ -560,6 +579,7 @@ spawnStrafer = ->
   enemy.y = y
   enemy.radius = straferDiameter / 2
   enemy.speed = straferSpeed
+  enemy.strafeDir = 1
   enemies.push enemy
   return enemy
 
