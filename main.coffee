@@ -32,6 +32,8 @@ playerColor = 0xffff0b
 scrW = 800
 scrH = 600
 shieldDiameter = 50
+starInertia = 0.6
+starSpeed = 350 / 60
 straferColor = 0xd654a0
 straferDiameter = 25
 straferFireChance = 0.5 / 60
@@ -517,7 +519,7 @@ processPlayerMovement = ->
   switch player.mode
     when 'circle' then processCircleMovement()
     when 'triangle' then processTriangleMovement()
-    when 'star' then processCircleMovement()
+    when 'star' then processStarMovement()
     else throw new Error "unrecognised mode: #{player.mode}"
   return
 
@@ -536,6 +538,28 @@ processCircleMovement = ->
 
   player.vx = circleInertia * player.vx + (1-circleInertia) * targetvx
   player.vy = circleInertia * player.vy + (1-circleInertia) * targetvy
+
+  player.angle = Math.atan2 player.vx, -player.vy
+
+  moveEntityByVel player
+
+  return
+
+processStarMovement = ->
+  targetvx = 0
+  if playerSaysLeft() then targetvx -= starSpeed
+  if playerSaysRight() then targetvx += starSpeed
+  targetvy = 0
+  if playerSaysUp() then targetvy -= starSpeed
+  if playerSaysDown() then targetvy += starSpeed
+
+  if targetvx != 0 and targetvy != 0
+    # divide by root 2 so that total speed is still circleSpeed
+    targetvx *= 0.707
+    targetvy *= 0.707
+
+  player.vx = starInertia * player.vx + (1-starInertia) * targetvx
+  player.vy = starInertia * player.vy + (1-starInertia) * targetvy
 
   player.angle = Math.atan2 player.vx, -player.vy
 
