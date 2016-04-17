@@ -1,3 +1,5 @@
+"use strict"
+
 {Phaser} = window
 
 arenaBounds = { left: 8, right: 592, top: 8, bottom: 592 }
