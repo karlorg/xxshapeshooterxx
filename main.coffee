@@ -1032,7 +1032,7 @@ getChargerSpawnPoint = (wave=null) ->
         break
   return {x, y}
 
-spawnPointParticle = (x, y, ttl, options) ->
+spawnPointParticle = (x, y, ttl, options={}) ->
   {angle, speed, color, opacity} = options
   if opacity == undefined then opacity = 1
   p = {type: 'point', x, y, color, opacity, expirationTime: Date.now() + ttl}
@@ -1041,7 +1041,7 @@ spawnPointParticle = (x, y, ttl, options) ->
   particles.push p
   return p
 
-spawnPolyParticle = (x, y, ttl, options) ->
+spawnPolyParticle = (x, y, ttl, options={}) ->
   {angle, speed, color, shape, opacity} = options
   if opacity == undefined then opacity = 1
   p = {type: 'poly', x, y, color, opacity, shape, expirationTime: Date.now() + ttl}
