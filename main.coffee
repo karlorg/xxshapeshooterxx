@@ -28,7 +28,6 @@ drifterDiameter = 40
 drifterSpeed = 250 / 60
 drifterColor = 0xed4588
 enemyColor = 0xed4588
-enemySpawnChance = 0.01
 healthColor = 0x83f765
 playerColor = 0xffff0b
 scrW = 800
@@ -70,6 +69,7 @@ graphics = null
 keys = null
 particles = null
 player = null
+score = null
 texts = null
 waves = null
 weapons = null
@@ -151,6 +151,8 @@ create = ->
   }
 
   createWeapons()
+
+  score = 0
 
   waves =
     delay: 5000
@@ -274,12 +276,13 @@ draw = ->
   drawBullets()
   drawDeathRays()
   drawShield()
+  drawCrosshair()
 
   drawHealthBar()
   drawEnergyLevels()
   drawWavePreview()
   drawArenaBounds()
-  drawCrosshair()
+  drawScore()
   return
 
 toScreen = (x, y) ->
@@ -521,13 +524,22 @@ drawWavePreview = ->
     dx = width / wave.data.length
     for spec in wave.data
       drawEnemyAtScreenCoords spec.type, x+(drifterDiameter/4), y
-      t = game.add.text x-(drifterDiameter/4), y, "#{spec.count}",
-                        {font: "12px Arial", fill: "#ffffff"}
-      texts.push t
+      drawText x-(drifterDiameter/4), y, "#{spec.count}",
+               {font: "12px Arial", fill: "#ffffff"}
       x += dx
     y += drifterDiameter/2 + 8
     if y > scrH - 64 then break
   return
+
+drawScore = ->
+  drawText barsLeft, scrH-32, "#{score}",
+           {font: "24px Arial", fill: "#ffffff"}
+  return
+
+drawText = ->
+  t = game.add.text arguments...
+  texts.push t
+  return t
 
 fire = ->
   switch player.mode
