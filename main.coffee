@@ -107,28 +107,18 @@ create = ->
   return
 
 update = ->
-  processWeaponFire()
-  processWeaponEnergy()
   processEnemyMovement()
   processEnemyFire()
-  processShapeshiftKeys()
-  processPlayerMovement()
-  # addPlayerThrust()
+  if player.alive
+    processWeaponFire()
+    processWeaponEnergy()
+    processShapeshiftKeys()
+    processPlayerMovement()
   processParticles()
   processBulletMovement()
   processDeathRayMovement()
 
-  enemiesToKill = []
-  for enemy, i in enemies
-    if weapons.circle.active and enemyTouchingShield enemy
-      enemiesToKill.push i
-    else if enemyTouchingPlayer enemy
-      killPlayer()
-  i = enemiesToKill.length
-  while i > 0
-    i -= 1
-    enemies.splice enemiesToKill[i], 1
-
+  collideEnemiesAndShield()
   collideBulletsAndEnemies()
 
   draw()
@@ -647,6 +637,15 @@ processProjectileMovement = (ary) ->
     i -= 1
     ary.splice spent[i], 1
   return
+
+collideEnemiesAndShield = ->
+  enemiesToKill = {}
+  for enemy, i in enemies
+    if weapons.circle.active and enemyTouchingShield enemy
+      enemiesToKill[i] = true
+    else if enemyTouchingPlayer enemy
+      killPlayer()
+  removeSetFromArray enemiesToKill, enemies
 
 collideBulletsAndEnemies = ->
   spent = []
