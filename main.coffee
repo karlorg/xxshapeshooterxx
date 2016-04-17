@@ -44,8 +44,6 @@ tau = 2 * Math.PI
 triangleAccel = 15 / 60
 triangleMaxSpeed = 600 / 60
 triangleTurnRate = (tau/2) / 60
-waveDelay = 7000
-waveSpawnDelay = 250
 weaponColor = 0x22ddff
 
 barsLeft = 620
@@ -64,6 +62,7 @@ graphics = null
 keys = null
 particles = null
 player = null
+waves = null
 weapons = null
 
 window.onload = ->
@@ -142,7 +141,14 @@ create = ->
   }
 
   createWeapons()
-  startRandomWave()
+
+  waves =
+    delay: 5000
+    spawnDelay: 250
+    seriesLength: 3
+    seriesDelay: 12000
+    queued: []
+  queueWaveSeries()
 
   return
 
@@ -178,6 +184,13 @@ render = ->
   # game.debug.text "#{x}, #{y}", 0, 500
   return
 
+queueWaveSeries = ->
+  for i in [0...waves.seriesLength]
+    game.time.events.add i * waves.delay, startRandomWave
+  seriesTime = (waves.seriesLength - 1) * waves.delay
+  nextSeriesTime = seriesTime + waves.seriesDelay
+  game.time.events.add nextSeriesTime, queueWaveSeries
+
 startRandomWave = ->
   num = game.rnd.frac()
   if num < 0.4
@@ -187,8 +200,6 @@ startRandomWave = ->
                 {count: 3, type: 'drifter'}]
    else
      startWave [{count: 12, type: 'charger', interval: 250/12}]
-
-  game.time.events.add waveDelay, startRandomWave
   return
 
 startWave = (spec) ->
@@ -198,7 +209,7 @@ startWave = (spec) ->
   for {count, type, interval} in spec
     for i in [0...count]
       game.time.events.add time, mkSpawner(type)
-      time += interval ? waveSpawnDelay
+      time += interval ? waves.spawnDelay
   return
 
 createWeapons = ->
