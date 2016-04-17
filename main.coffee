@@ -48,6 +48,9 @@ triangleAccel = 15 / 60
 triangleMaxSpeed = 600 / 60
 triangleTurnRate = (tau/2) / 60
 weaponColor = 0x22ddff
+weaponDepletedColor = 0x117788
+weaponCooldownColor = 0xed4588
+weaponCooldownDepletedColor = 0x802244
 
 barsLeft = 620
 barsRight = 780
@@ -285,6 +288,7 @@ draw = ->
   drawDeathRays()
   drawShield()
   drawCrosshair()
+  drawHud()
 
   drawHealthBar()
   drawEnergyLevels()
@@ -496,6 +500,29 @@ drawShield = ->
   graphics.drawCircle x, y, distToScreen(shieldDiameter)
   return
 
+drawHud = ->
+  width = player.radius * 3
+  left = player.x - player.radius * 1.5
+  y = player.y + player.radius * 1.2
+  sw = distToScreen width
+  {x: sl, y: sy} = toScreen left, y
+
+  graphics.lineStyle 2, healthColor, 0.6
+  graphics.moveTo sl, sy
+  graphics.lineTo sl+(sw*player.health/100), sy
+  graphics.lineStyle 2, enemyColor, 0.6
+  graphics.lineTo sl+sw, sy
+
+  weapon = weapons[player.mode]
+  mainColor = if weapon.cooling then weaponCooldownColor else weaponColor
+  offColor = if weapon.cooling then weaponCooldownDepletedColor else weaponDepletedColor
+  graphics.lineStyle 2, mainColor, 0.6
+  graphics.moveTo sl, sy+3
+  graphics.lineTo sl+(sw*weapons[player.mode].energy/100), sy+3
+  graphics.lineStyle 2, offColor, 0.6
+  graphics.lineTo sl+sw, sy+3
+  return
+
 drawHealthBar = ->
   width = barsRight - barsLeft
   graphics.lineStyle barsThickness, enemyColor, 1.0
@@ -511,7 +538,7 @@ drawEnergyLevels = ->
   width = barsRight - barsLeft
   y = energyBarsTop
   for own name, weapon of weapons
-    color = if weapon.cooling then enemyColor else weaponColor
+    color = if weapon.cooling then weaponCooldownColor else weaponColor
     graphics.lineStyle barsThickness, color, 1.0
     graphics.moveTo barsLeft, y
     graphics.lineTo barsLeft+(weapon.energy*width/100), y
