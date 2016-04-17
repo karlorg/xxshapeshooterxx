@@ -147,7 +147,8 @@ update = ->
 
   collideEnemiesAndShield()
   collideBulletsAndEnemies()
-  collideEnemiesAndPlayer()
+  if player.alive
+    collideEnemiesAndPlayer()
 
   draw()
   return
@@ -677,7 +678,7 @@ collideEnemiesAndShield = ->
 collideEnemiesAndPlayer = ->
   for enemy in enemies
     if enemyTouchingPlayer enemy
-      killPlayer()
+      killPlayer enemy
   return
 
 collideBulletsAndEnemies = ->
@@ -818,8 +819,38 @@ spawnPolyParticle = (x, y, ttl, options) ->
   particles.push p
   return p
 
-killPlayer = ->
+explode = (victim, source, color, numParticles, options) ->
+  {duration} = options
+  duration ?= 300
+  angleToVictim = Math.atan2 victim.x-source.x, victim.y-source.y
+  baseVel = {
+    x: 0.8 * source.vx + 0.2 * victim.vx,
+    y: 0.8 * source.vy + 0.2 * victim.vy
+    }
+  baseSpeed = 300 / 60 # Math.sqrt(baseVel.x**2 + baseVel.y**2)
+  for i in [0...numParticles]
+    x = victim.x + game.rnd.realInRange (- circleDiameter), circleDiameter
+    y = victim.y + game.rnd.realInRange (- circleDiameter), circleDiameter
+    if source.x == victim.x and source.y == victim.y
+      angle = game.rnd.realInRange 0, tau
+    else
+      angle = angleToVictim + game.rnd.realInRange (-tau/12), tau/12
+    speed = baseSpeed * game.rnd.realInRange 0.8, 1.2
+    shape = []
+    for j in [0...3]
+      shape.push [game.rnd.realInRange(-16, 16), game.rnd.realInRange(-16, 16)]
+    spawnPolyParticle x, y, duration,
+      angle: angle
+      speed: speed
+      color: color
+      opacity: 1.0
+      shape: shape
+  return
+
+killPlayer = (source) ->
   player.alive = false
+  source ?= { x: player.x, y: player.y, vx: 0, vy: 0 }
+  explode player, source, playerColor, 16, duration: 1000
   game.time.events.add 3000, -> game.state.start 'title'
   return
 
