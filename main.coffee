@@ -121,6 +121,7 @@ create = ->
     y: 500
     vx: 0
     vy: 0
+    radius: circleDiameter / 2
     angle: 0  # clockwise from top
   }
 
@@ -672,6 +673,7 @@ collideEnemiesAndShield = ->
   for enemy, i in enemies
     if weapons.circle.active and enemyTouchingShield enemy
       enemiesToKill[i] = true
+      explode enemy, player, enemy.color
   removeSetFromArray enemiesToKill, enemies
   return
 
@@ -698,6 +700,7 @@ collideBulletsAndEnemies = ->
           spent.push bi
         if ei not in dead
           dead.push ei
+          explode enemy, bullet, enemy.color
 
   # remove dead
   i = dead.length
@@ -727,6 +730,7 @@ spawnDrifter = ->
   enemy = {
     type: 'drifter'
     bodytype: 'circle'
+    color: drifterColor
   }
   {x, y} = getEnemySpawnPoint()
   enemy.x = x
@@ -743,6 +747,7 @@ spawnStrafer = ->
   enemy = {
     type: 'strafer'
     bodytype: 'circle'
+    color: straferColor
   }
   {x, y} = getEnemySpawnPoint()
   enemy.x = x
@@ -757,6 +762,7 @@ spawnCharger = ->
   enemy = {
     type: 'charger'
     bodytype: 'square'
+    color: chargerColor
   }
   {x, y} = getChargerSpawnPoint()
   enemy.x = x
@@ -819,9 +825,9 @@ spawnPolyParticle = (x, y, ttl, options) ->
   particles.push p
   return p
 
-explode = (victim, source, color, numParticles, options) ->
-  {duration} = options
-  duration ?= 300
+explode = (victim, source, color, options={}) ->
+  duration = options.duration ? 300
+  numParticles = options.numParticles ? (victim.radius * 2 * 16 / circleDiameter)
   angleToVictim = Math.atan2 victim.x-source.x, victim.y-source.y
   baseVel = {
     x: 0.8 * source.vx + 0.2 * victim.vx,
@@ -850,7 +856,7 @@ explode = (victim, source, color, numParticles, options) ->
 killPlayer = (source) ->
   player.alive = false
   source ?= { x: player.x, y: player.y, vx: 0, vy: 0 }
-  explode player, source, playerColor, 16, duration: 1000
+  explode player, source, playerColor, duration: 1000
   game.time.events.add 3000, -> game.state.start 'title'
   return
 
