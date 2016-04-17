@@ -52,6 +52,7 @@ barsThickness = 4
 healthBarY = 20
 energyBarsTop = 40
 energyBarsSpacing = 20
+wavePreviewTimeColor = 0x695c60
 wavePreviewLeft = barsLeft
 wavePreviewRight = barsRight
 wavePreviewTop = energyBarsTop + 3 * energyBarsSpacing
@@ -206,8 +207,10 @@ queueWaveSeries = ->
         waves.queued.splice 0, 1
   for i in [1..waves.seriesLength]
     wave = game.rnd.pick waveLibrary
-    game.time.events.add i * waves.delay, mkWaveSpawner(wave)
-    waves.queued.push wave
+    delay = i * waves.delay
+    due = Date.now() + delay
+    game.time.events.add delay, mkWaveSpawner(wave)
+    waves.queued.push {wave: wave, due: due, delay: delay}
   seriesTime = (waves.seriesLength - 1) * waves.delay
   nextSeriesTime = seriesTime + waves.seriesDelay
   game.time.events.add nextSeriesTime, queueWaveSeries
@@ -500,9 +503,15 @@ drawEnergyLevels = ->
   return
 
 drawWavePreview = ->
+  now = Date.now()
   width = wavePreviewRight - wavePreviewLeft
   y = wavePreviewTop
-  for wave in waves.queued
+  for {wave, due, delay} in waves.queued
+    timeLeft = now - due
+    graphics.lineStyle barsThickness, wavePreviewTimeColor, 1.0
+    graphics.moveTo wavePreviewLeft, y
+    graphics.lineTo wavePreviewLeft + width * Math.abs(timeLeft / delay), y
+
     x = wavePreviewLeft + width/(2*wave.data.length)
     dx = width / wave.data.length
     for spec in wave.data
