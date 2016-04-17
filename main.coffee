@@ -40,27 +40,50 @@ waveDelay = 7000
 waveSpawnDelay = 250
 weaponColor = 0x22ddff
 
-bullets = []
+bullets = null
 cursors = null
-deathRays = []
-enemies = []
+deathRays = null
+enemies = null
 game = null
 graphics = null
 keys = null
-particles = []
+particles = null
 player = null
-weapons = {}
+weapons = null
 
 window.onload = ->
-  game = new Phaser.Game scrW, scrH, Phaser.AUTO, '', {
-    preload, create, render, update
+  game = new Phaser.Game scrW, scrH, Phaser.AUTO, ''
+  game.state.add 'play', {
+    preload, create, render, shutDown, update
   }
+  game.state.add 'title', titleState
+  game.state.start 'play'
   return
+
+titleState =
+  preload: ->
+  create: ->
+    game.add.text 80, 80, "xXShapeShooterXx",
+                  {font: "50px Arial", fill: "#ffffff"}
+    game.add.text 80, scrH-80-50, "Click to start",
+                  {font: "50px Arial", fill: "#ffffff"}
+    game.input.onTap.add -> game.state.start 'play'
+    return
+
+  update: ->
+  render: ->
 
 preload = ->
   return
 
 create = ->
+
+  bullets = []
+  deathRays = []
+  enemies = []
+  particles = []
+  weapons = {}
+
   cursors = game.input.keyboard.createCursorKeys()
   keys = game.input.keyboard.addKeys
     left: Phaser.KeyCode.A
@@ -104,6 +127,10 @@ create = ->
   createWeapons()
   startRandomWave()
 
+  return
+
+shutDown = ->
+  game.time.events.removeAll()
   return
 
 update = ->
@@ -793,6 +820,7 @@ spawnPolyParticle = (x, y, ttl, options) ->
 
 killPlayer = ->
   player.alive = false
+  game.time.events.add 3000, -> game.state.start 'title'
   return
 
 enemyTouchingShield = (enemy) ->
