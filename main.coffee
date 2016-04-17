@@ -194,8 +194,9 @@ startWave = (spec) ->
   return
 
 createWeapons = ->
-  for name in ['circle', 'triangle']
+  for name in ['circle', 'triangle', 'star']
     weapon = {
+      name: name
       active: false
       energy: 100
       drain: 50 / 60
@@ -267,6 +268,7 @@ drawPlayer = ->
   switch player.mode
     when 'circle' then drawPlayerCircle()
     when 'triangle' then drawPlayerTriangle()
+    when 'star' then drawPlayerStar()
     else throw new Error "unrecognised mode: #{player.mode}"
   return
 
@@ -279,13 +281,21 @@ drawPlayerCircle = ->
   return
 
 drawPlayerTriangle = ->
-  radius = distToScreen(circleDiameter/2)
+  drawPlayerNPoly 3
+  return
+
+drawPlayerStar = ->
+  drawPlayerNPoly 5
+  return
+
+drawPlayerNPoly = (n, options={}) ->
+  skip = options.skip ? 0
+  radius = circleDiameter/2
   points = []
-  for i in [0..2]
-    angle = i * tau / 3
-    # no idea why *2 here :/
-    x = radius * 2 * Math.sin angle
-    y = - radius * 2 * Math.cos angle
+  for i in [0...n]
+    angle = i * tau / (n + skip)
+    x = radius * Math.sin angle
+    y = - radius * Math.cos angle
     points.push [x, y]
 
   # rotate to player angle
@@ -302,7 +312,7 @@ drawPlayerTriangle = ->
 
   graphics.lineStyle 0
   graphics.beginFill playerColor, 1.0
-  {x, y} = toScreen points[2][0], points[2][1]
+  {x, y} = toScreen points[n-1][0], points[n-1][1]
   graphics.moveTo x, y
   for [x, y] in points
     {x: sx, y: sy} = toScreen x, y
@@ -444,12 +454,15 @@ processShapeshiftKeys = ->
     shiftToCircle()
   else if keys[2].isDown
     shiftToTriangle()
+  else if keys[3].isDown
+    shiftToStar()
   return
 
 processPlayerMovement = ->
   switch player.mode
     when 'circle' then processCircleMovement()
     when 'triangle' then processTriangleMovement()
+    when 'star' then processCircleMovement()
     else throw new Error "unrecognised mode: #{player.mode}"
   return
 
@@ -957,12 +970,23 @@ doesCircleTouchSquare = (x, y, r, {left, right, top, bottom}) ->
 
 shiftToCircle = ->
   player.mode = 'circle'
-  weapons.triangle.active = false
+  deactivateWeaponsExcept 'circle'
   return
 
 shiftToTriangle = ->
   player.mode = 'triangle'
-  weapons.circle.active = false
+  deactivateWeaponsExcept 'triangle'
+  return
+
+shiftToStar = ->
+  player.mode = 'star'
+  deactivateWeaponsExcept 'star'
+  return
+
+deactivateWeaponsExcept = (name) ->
+  for own n, w of weapons
+    if n != name
+      w.active = false
   return
 
 removeSetFromArray = (set, ary) ->
