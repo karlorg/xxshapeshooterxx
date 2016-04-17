@@ -211,8 +211,14 @@ createWeapons = ->
       cooling: false
     }
     weapons[name] = weapon
+
   weapons.triangle.recharge = 10 / 60
   weapons.triangle.drain = 80 / 60
+
+  weapons.star.lastFired = new Date 0
+  weapons.star.fireDelay = 200
+  weapons.star.drain = 20  # since it only drains once per shot
+  weapons.star.recharge = 30 / 60
   return
 
 draw = ->
@@ -470,6 +476,10 @@ shootTriangle = ->
   return bullet
 
 shootStar = ->
+  if weapons.star.lastFired + weapons.star.fireDelay > Date.now()
+    weapons.star.active = false
+    return
+  weapons.star.lastFired = Date.now()
   {x: sx, y: sy} = game.input.activePointer
   {x, y} = toWorldCoords sx, sy
   angleToCursor = Math.atan2 x - player.x, player.y - y
