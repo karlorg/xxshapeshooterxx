@@ -123,14 +123,6 @@ create = ->
     3: Phaser.KeyCode.THREE
     4: Phaser.KeyCode.FOUR
   game.input.keyboard.addKeyCapture [
-    Phaser.KeyCode.A
-    Phaser.KeyCode.R
-    Phaser.KeyCode.S
-    Phaser.KeyCode.W
-    Phaser.KeyCode.ONE
-    Phaser.KeyCode.TWO
-    Phaser.KeyCode.THREE
-    Phaser.KeyCode.FOUR
     Phaser.KeyCode.UP
     Phaser.KeyCode.DOWN
     Phaser.KeyCode.LEFT
