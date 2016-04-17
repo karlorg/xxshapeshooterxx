@@ -16,7 +16,9 @@ circleSpeed = 200 / 60
 circleDiameter = 30
 coolingRecovery = 35  # % of energy needed before cooldown expires
 crosshairColor = 0xffffff
-crosshairInactiveColor = 0xed4588
+crosshairOpacity = 0.8
+crosshairInactiveColor = 0x444444
+crosshairInactiveOpacity = 0.5
 crosshairOuterRadius = 16  # in screen coords
 crosshairInnerRadius = 11  # in screen coords
 deathRayColor = 0xff0000
@@ -333,8 +335,8 @@ drawCrosshair = ->
     when 'star' then crosshairColor
     else crosshairInactiveColor
   opacity = switch player.mode
-    when 'star' then 0.8
-    else 0.05
+    when 'star' then crosshairOpacity
+    else crosshairInactiveOpacity
   graphics.lineStyle 2, color, opacity
   graphics.moveTo sx - crosshairOuterRadius, sy
   graphics.lineTo sx + crosshairOuterRadius, sy
