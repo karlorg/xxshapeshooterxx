@@ -22,6 +22,7 @@ drifterSpeed = 250 / 60
 drifterColor = 0xed4588
 enemyColor = 0xed4588
 enemySpawnChance = 0.01
+healthColor = 0x83f765
 playerColor = 0xffff0b
 scrW = 800
 scrH = 600
@@ -39,6 +40,13 @@ triangleTurnRate = (tau/2) / 60
 waveDelay = 7000
 waveSpawnDelay = 250
 weaponColor = 0x22ddff
+
+barsLeft = 620
+barsRight = 780
+barsThickness = 4
+healthBarY = 20
+energyBarsTop = 40
+energyBarsSpacing = 20
 
 bullets = null
 cursors = null
@@ -121,6 +129,7 @@ create = ->
     y: 500
     vx: 0
     vy: 0
+    health: 100
     radius: circleDiameter / 2
     angle: 0  # clockwise from top
   }
@@ -201,6 +210,7 @@ draw = ->
   drawShield()
   drawBullets()
   drawDeathRays()
+  drawHealthBar()
   drawEnergyLevels()
   drawParticles()
   return
@@ -369,14 +379,27 @@ drawShield = ->
   graphics.drawCircle x, y, distToScreen(shieldDiameter)
   return
 
+drawHealthBar = ->
+  width = barsRight - barsLeft
+  graphics.lineStyle barsThickness, enemyColor, 1.0
+  graphics.moveTo barsLeft, healthBarY
+  graphics.lineTo barsRight, healthBarY
+
+  graphics.lineStyle barsThickness, healthColor, 1.0
+  graphics.moveTo barsLeft, healthBarY
+  graphics.lineTo barsLeft+(width * player.health / 100), healthBarY
+  return
+
 drawEnergyLevels = ->
-  y = 0
+  width = barsRight - barsLeft
+  y = energyBarsTop
   for own name, weapon of weapons
-    y += 20
     color = if weapon.cooling then enemyColor else weaponColor
-    graphics.lineStyle 4, color, 1.0
-    graphics.moveTo 620, y
-    graphics.lineTo 620+(weapon.energy*160*0.01), y
+    graphics.lineStyle barsThickness, color, 1.0
+    graphics.moveTo barsLeft, y
+    graphics.lineTo barsLeft+(weapon.energy*width/100), y
+    y += energyBarsSpacing
+  return
 
 fire = ->
   switch player.mode
