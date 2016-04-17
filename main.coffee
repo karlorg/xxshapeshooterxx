@@ -521,10 +521,11 @@ drawWavePreview = ->
   width = wavePreviewRight - wavePreviewLeft
   y = wavePreviewTop
   for {wave, due, delay} in waves.queued
-    timeLeft = now - due
-    graphics.lineStyle barsThickness, wavePreviewTimeColor, 1.0
-    graphics.moveTo wavePreviewLeft, y
-    graphics.lineTo wavePreviewLeft + width * Math.abs(timeLeft / delay), y
+    timeLeft = due - now
+    if timeLeft >= 0  # if we left the tab and came back it might be less
+      graphics.lineStyle barsThickness, wavePreviewTimeColor, 1.0
+      graphics.moveTo wavePreviewLeft, y
+      graphics.lineTo wavePreviewLeft + width * (timeLeft / delay), y
 
     x = wavePreviewLeft + width/(2*wave.data.length)
     dx = width / wave.data.length
