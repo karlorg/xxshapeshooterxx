@@ -41,6 +41,8 @@ straferMinDistance = 250
 straferMaxDistance = 300
 straferSpeed = 150 / 60
 tau = 2 * Math.PI
+thrustParticlesIdleSpeed = 50 / 60
+thrustParticlesMaxSpeed = 200 / 60
 triangleAccel = 15 / 60
 triangleMaxSpeed = 600 / 60
 triangleTurnRate = (tau/2) / 60
@@ -173,6 +175,7 @@ update = ->
     processWeaponEnergy()
     processShapeshiftKeys()
     processPlayerMovement()
+    addPlayerThrust()
   processParticles()
   processBulletMovement()
   processDeathRayMovement()
@@ -805,22 +808,21 @@ straferFire = (strafer) ->
   return
 
 addPlayerThrust = ->
-  speed = Math.sqrt(player.vx**2 + player.vy**2)
-  chance = 0.1 + speed * (200 / 60) * 0.8
-  chance = game.math.clamp chance, 0, 1
-  if game.rnd.frac() < chance
-    xoff = - circleDiameter * 0.25 * Math.sin player.angle
-    yoff = circleDiameter * 0.25 * Math.cos player.angle
-    particle = {
-      x: player.x + xoff
-      y: player.y + yoff
-      vx: xoff + game.rnd.realInRange -1, 1
-      vy: yoff + game.rnd.realInRange -1, 1
-    }
-    thrustParticles.push particle
-    game.time.events.add 200, ->
-      if thrustParticles.length > 0
-        thrustParticles.splice thrustParticles.length-1, 1
+  angle = player.angle - tau/2 + game.rnd.realInRange (-tau/18), tau/18
+  xoff = player.radius * Math.sin angle
+  yoff = - player.radius * Math.cos angle
+  x = player.x + xoff
+  y = player.y + yoff
+  speed = if player.vx < 10/60 and player.vy < 10/60
+    thrustParticlesIdleSpeed
+  else
+    thrustParticlesMaxSpeed
+  spawnPointParticle x, y, 100, {
+    angle: angle
+    speed: speed
+    color: weaponColor
+    opacity: 0.5
+  }
   return
 
 processParticles = ->
@@ -1037,7 +1039,7 @@ spawnPointParticle = (x, y, ttl, options={}) ->
   if opacity == undefined then opacity = 1
   p = {type: 'point', x, y, color, opacity, expirationTime: Date.now() + ttl}
   p.vx = speed * Math.sin angle
-  p.vy = speed * Math.cos angle
+  p.vy = - speed * Math.cos angle
   particles.push p
   return p
 
@@ -1046,7 +1048,7 @@ spawnPolyParticle = (x, y, ttl, options={}) ->
   if opacity == undefined then opacity = 1
   p = {type: 'poly', x, y, color, opacity, shape, expirationTime: Date.now() + ttl}
   p.vx = speed * Math.sin angle
-  p.vy = speed * Math.cos angle
+  p.vy = - speed * Math.cos angle
   particles.push p
   return p
 
