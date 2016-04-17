@@ -65,6 +65,7 @@ graphics = null
 keys = null
 particles = null
 player = null
+texts = null
 waves = null
 weapons = null
 
@@ -99,6 +100,7 @@ create = ->
   deathRays = []
   enemies = []
   particles = []
+  texts = []
   weapons = {}
 
   cursors = game.input.keyboard.createCursorKeys()
@@ -161,6 +163,8 @@ shutDown = ->
   return
 
 update = ->
+  clearTexts()
+
   processEnemyMovement()
   processEnemyFire()
   if player.alive
@@ -188,13 +192,19 @@ render = ->
   # game.debug.text "#{x}, #{y}", 0, 500
   return
 
+clearTexts = ->
+  for t in texts
+    t.destroy()
+  texts = []
+  return
+
 queueWaveSeries = ->
   mkWaveSpawner = (w) ->
     ->
       spawnWave w
       if waves.queued.length > 0
         waves.queued.splice 0, 1
-  for i in [0...waves.seriesLength]
+  for i in [1..waves.seriesLength]
     wave = game.rnd.pick waveLibrary
     game.time.events.add i * waves.delay, mkWaveSpawner(wave)
     waves.queued.push wave
@@ -399,6 +409,14 @@ drawEnemy = (enemy) ->
       drawCharger enemy
   return
 
+drawEnemyAtScreenCoords = (type, sx, sy) ->
+  enemy = makeEnemy type
+  {x, y} = toWorldCoords sx, sy
+  enemy.x = x
+  enemy.y = y
+  drawEnemy enemy
+  return
+
 drawDrifter = (drifter) ->
   graphics.lineStyle 0
   graphics.beginFill drifterColor, 1.0
@@ -482,7 +500,19 @@ drawEnergyLevels = ->
   return
 
 drawWavePreview = ->
-
+  width = wavePreviewRight - wavePreviewLeft
+  y = wavePreviewTop
+  for wave in waves.queued
+    x = wavePreviewLeft + width/(2*wave.data.length)
+    dx = width / wave.data.length
+    for spec in wave.data
+      drawEnemyAtScreenCoords spec.type, x+(drifterDiameter/4), y
+      t = game.add.text x-(drifterDiameter/4), y, "#{spec.count}",
+                        {font: "12px Arial", fill: "#ffffff"}
+      texts.push t
+      x += dx
+    y += drifterDiameter/2 + 8
+    if y > scrH - 64 then break
   return
 
 fire = ->
@@ -883,6 +913,11 @@ collideBulletsAndEnemies = ->
   return
 
 spawnEnemy = (type, wave=null) ->
+  enemy = makeEnemy type, wave
+  enemies.push enemy
+  return
+
+makeEnemy = (type, wave=null) ->
   switch type
     when 'drifter'
       spawnDrifter wave
@@ -890,7 +925,6 @@ spawnEnemy = (type, wave=null) ->
       spawnStrafer wave
     when 'charger'
       spawnCharger wave
-  return
 
 spawnDrifter = ->
   enemy = {
@@ -906,7 +940,6 @@ spawnDrifter = ->
   enemy.vy = drifterSpeed * Math.sin angle
   enemy.radius = drifterDiameter / 2
   enemy.speed = drifterSpeed
-  enemies.push enemy
   return enemy
 
 spawnStrafer = ->
@@ -921,7 +954,6 @@ spawnStrafer = ->
   enemy.radius = straferDiameter / 2
   enemy.speed = straferSpeed
   enemy.strafeDir = 1
-  enemies.push enemy
   return enemy
 
 getEnemySpawnPoint = ->
@@ -948,7 +980,6 @@ spawnCharger = (wave=null) ->
   enemy.speed = chargerSpeed
   angleToPlayer = Math.atan2 player.x-enemy.x, player.y-enemy.y
   enemy.angle = angleToPlayer
-  enemies.push enemy
   return enemy
 
 chargerSpawnAngle = 0
