@@ -1075,6 +1075,7 @@ spawnPolyParticle = (x, y, ttl, options={}) ->
 
 explode = (victim, source, color, options={}) ->
   duration = options.duration ? 300
+  scale = options.scale ? 1.0
   numParticles = options.numParticles ? (victim.radius * 2 * 16 / circleDiameter)
   angleToVictim = Math.atan2 victim.x-source.x, victim.y-source.y
   baseVel = {
@@ -1092,7 +1093,8 @@ explode = (victim, source, color, options={}) ->
     speed = baseSpeed * game.rnd.realInRange 0.8, 1.2
     shape = []
     for j in [0...3]
-      shape.push [game.rnd.realInRange(-16, 16), game.rnd.realInRange(-16, 16)]
+      shape.push [scale * game.rnd.realInRange(-16, 16),
+                  scale * game.rnd.realInRange(-16, 16)]
     spawnPolyParticle x, y, duration,
       angle: angle
       speed: speed
@@ -1111,7 +1113,7 @@ killPlayer = (source) ->
 damagePlayer = (dmg, source) ->
   player.health -= dmg
   if player.health < 0 then player.health = 0
-  explode player, source, playerColor, numParticles: 3
+  explode player, source, playerColor, numParticles: 3, scale: 0.4
   if player.health <= 0
     killPlayer source
   return
