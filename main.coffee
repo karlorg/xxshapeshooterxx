@@ -879,6 +879,7 @@ collideEnemiesAndPlayer = ->
   return
 
 collideDeathRaysAndShield = ->
+  return unless weapons.circle.active
   deathRaysToKill = {}
   testShape = new Phaser.Circle player.x, player.y, weapons.circle.radius * 2
   for deathRay, i in deathRays
