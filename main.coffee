@@ -171,7 +171,9 @@ update = ->
   return
 
 render = ->
-  # game.debug.text "#{weapons.circle.energy}", 0, 500
+  # {x: sx, y: sy} = game.input.activePointer
+  # {x, y} = toWorldCoords sx, sy
+  # game.debug.text "#{x}, #{y}", 0, 500
   return
 
 startRandomWave = ->
@@ -232,6 +234,10 @@ toScreen = (x, y) ->
   y: y * arenaHeight * 0.001 + arenaBounds.top
 
 distToScreen = (d) -> d * arenaWidth * 0.001
+
+toWorldCoords = (sx, sy) ->
+  x: (sx - arenaBounds.left) * 1000 / arenaWidth
+  y: (sy - arenaBounds.top) * 1000 / arenaHeight
 
 drawArenaBounds = ->
   graphics.lineStyle 2, 0xffffff, 1.0
@@ -448,6 +454,9 @@ fire = ->
     when 'triangle'
       if weapons.triangle.energy > 0
         shootTriangle()
+    when 'star'
+      if weapons.star.energy > 0
+        shootStar()
   return
 
 shootTriangle = ->
@@ -459,6 +468,19 @@ shootTriangle = ->
   }
   bullets.push bullet
   return bullet
+
+shootStar = ->
+  {x: sx, y: sy} = game.input.activePointer
+  {x, y} = toWorldCoords sx, sy
+  angleToCursor = Math.atan2 x - player.x, player.y - y
+  bullet = {
+    x: player.x
+    y: player.y
+    angle: angleToCursor
+    speed: bulletSpeed
+  }
+  bullets.push bullet
+  return
 
 playerSaysLeft = -> cursors.left.isDown or keys.left.isDown
 playerSaysRight = -> cursors.right.isDown or keys.right.isDown
