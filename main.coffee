@@ -52,6 +52,9 @@ barsThickness = 4
 healthBarY = 20
 energyBarsTop = 40
 energyBarsSpacing = 20
+wavePreviewLeft = barsLeft
+wavePreviewRight = barsRight
+wavePreviewTop = energyBarsTop + 3 * energyBarsSpacing
 
 bullets = null
 cursors = null
@@ -186,8 +189,15 @@ render = ->
   return
 
 queueWaveSeries = ->
+  mkWaveSpawner = (w) ->
+    ->
+      spawnWave w
+      if waves.queued.length > 0
+        waves.queued.splice 0, 1
   for i in [0...waves.seriesLength]
-    game.time.events.add i * waves.delay, spawnRandomWave
+    wave = game.rnd.pick waveLibrary
+    game.time.events.add i * waves.delay, mkWaveSpawner(wave)
+    waves.queued.push wave
   seriesTime = (waves.seriesLength - 1) * waves.delay
   nextSeriesTime = seriesTime + waves.seriesDelay
   game.time.events.add nextSeriesTime, queueWaveSeries
@@ -203,12 +213,8 @@ incrementWaveSeries = ->
   waves.seriesDelay = s.seriesDelay
   return
 
-spawnRandomWave = ->
-  wave = game.rnd.pick waveLibrary
-  startWave wave.data
-  return
-
-startWave = (spec) ->
+spawnWave = (wave) ->
+  spec = wave.data
   time = 0
   mkSpawner = (t, w) ->
     -> spawnEnemy t, w
@@ -243,15 +249,18 @@ createWeapons = ->
 
 draw = ->
   graphics.clear()
-  drawArenaBounds()
+
   drawPlayer()
   drawEnemies()
-  drawShield()
+  drawParticles()
   drawBullets()
   drawDeathRays()
+  drawShield()
+
   drawHealthBar()
   drawEnergyLevels()
-  drawParticles()
+  drawWavePreview()
+  drawArenaBounds()
   drawCrosshair()
   return
 
@@ -470,6 +479,10 @@ drawEnergyLevels = ->
     graphics.moveTo barsLeft, y
     graphics.lineTo barsLeft+(weapon.energy*width/100), y
     y += energyBarsSpacing
+  return
+
+drawWavePreview = ->
+
   return
 
 fire = ->
@@ -1169,6 +1182,7 @@ waveLibrary = [
 
   { data: [{count: 10, type: 'drifter'}]}
   { data: [{count: 8, type: 'strafer'}]}
-  { data: [{count: 12, type: 'charger', interval: 250 / 12}]}
+  { data: [{count: 12, type: 'charger', interval: 250 / 12},
+           {count: 3, type: 'drifter'}]}
 
 ]
