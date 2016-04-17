@@ -216,9 +216,10 @@ startRandomWave = ->
 
 startWave = (spec) ->
   time = 0
-  mkSpawner = (t) ->
-    -> spawnEnemy t
-  for {count, type, interval} in spec
+  mkSpawner = (t, w) ->
+    -> spawnEnemy t, w
+  for wave in spec
+    {count, type, interval} = wave
     for i in [0...count]
       game.time.events.add time, mkSpawner(type)
       time += interval ? waves.spawnDelay
@@ -874,14 +875,14 @@ collideBulletsAndEnemies = ->
 
   return
 
-spawnEnemy = (type) ->
+spawnEnemy = (type, wave=null) ->
   switch type
     when 'drifter'
-      spawnDrifter()
+      spawnDrifter wave
     when 'strafer'
-      spawnStrafer()
+      spawnStrafer wave
     when 'charger'
-      spawnCharger()
+      spawnCharger wave
   return
 
 spawnDrifter = ->
@@ -916,13 +917,22 @@ spawnStrafer = ->
   enemies.push enemy
   return enemy
 
-spawnCharger = ->
+getEnemySpawnPoint = ->
+  x = null
+  until x != null and Math.abs(x-player.x) > 200
+    x = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  y = null
+  until y != null and Math.abs(y-player.y) > 200
+    y = game.rnd.between drifterDiameter, 1000-drifterDiameter
+  return {x, y}
+
+spawnCharger = (wave=null) ->
   enemy = {
     type: 'charger'
     bodytype: 'square'
     color: chargerColor
   }
-  {x, y} = getChargerSpawnPoint()
+  {x, y} = getChargerSpawnPoint wave
   enemy.x = x
   enemy.y = y
   enemy.vx = 0
@@ -934,18 +944,15 @@ spawnCharger = ->
   enemies.push enemy
   return enemy
 
-getEnemySpawnPoint = ->
-  x = null
-  until x != null and Math.abs(x-player.x) > 200
-    x = game.rnd.between drifterDiameter, 1000-drifterDiameter
-  y = null
-  until y != null and Math.abs(y-player.y) > 200
-    y = game.rnd.between drifterDiameter, 1000-drifterDiameter
-  return {x, y}
-
 chargerSpawnAngle = 0
 
-getChargerSpawnPoint = ->
+getChargerSpawnPoint = (wave=null) ->
+  if wave != null
+    numInWave = wave.count
+  else
+    numInWave = 12
+  angleInc = tau * (numInWave + 1) / (3 * numInWave)
+
   retries = 10
   ok = false
   while retries > 0 and not ok
@@ -953,7 +960,7 @@ getChargerSpawnPoint = ->
     yoff = chargerSpawnDistance * Math.cos chargerSpawnAngle
     x = player.x + xoff
     y = player.y + yoff
-    chargerSpawnAngle += tau/12
+    chargerSpawnAngle += angleInc
     while chargerSpawnAngle > tau then chargerSpawnAngle -= tau
     if (x > 0 and x < 1000 and y > 0 and y < 1000)
       ok = true
