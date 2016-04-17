@@ -218,12 +218,14 @@ queueWaveSeries = ->
       spawnWave w
       if waves.queued.length > 0
         waves.queued.splice 0, 1
-  for i in [1..waves.seriesLength]
+  currDelay = 2000
+  for i in [0...waves.seriesLength]
     wave = game.rnd.pick waveLibrary
-    delay = i * waves.delay
+    delay = currDelay
     due = Date.now() + delay
     game.time.events.add delay, mkWaveSpawner(wave)
     waves.queued.push {wave: wave, due: due, delay: delay}
+    currDelay += waves.delay
   seriesTime = (waves.seriesLength - 1) * waves.delay
   nextSeriesTime = seriesTime + waves.seriesDelay
   game.time.events.add nextSeriesTime, queueWaveSeries
@@ -1200,54 +1202,48 @@ waveProgression = [
     seriesDelay: 12000
   }
 
-#  {
-#    seriesLength: 3
-#    delay: 6500
-#    seriesDelay: 11500
-#  }
-#
-#  {
-#    seriesLength: 3
-#    delay: 6000
-#    seriesDelay: 10000
-#  }
-#
-#  {
-#    seriesLength: 4
-#    delay: 5500
-#    seriesDelay: 10000
-#  }
-#
-#  {
-#    seriesLength: 4
-#    delay: 5500
-#    seriesDelay: 9000
-#  }
-#
-#  {
-#    seriesLength: 4
-#    delay: 5000
-#    seriesDelay: 9000
-#  }
-#
-#  {
-#    seriesLength: 5
-#    delay: 5000
-#    seriesDelay: 9000
-#  }
-#
-#  {
-#    seriesLength: 5
-#    delay: 4500
-#    seriesDelay: 8000
-#  }
-#
-#  {
-#    seriesLength: 6
-#    delay: 4000
-#    seriesDelay: 7500
-#
-#  }
+  {
+    seriesLength: 3
+    delay: 6000
+    seriesDelay: 10000
+  }
+
+  {
+    seriesLength: 4
+    delay: 5500
+    seriesDelay: 10000
+  }
+
+  {
+    seriesLength: 4
+    delay: 5500
+    seriesDelay: 9000
+  }
+
+  {
+    seriesLength: 4
+    delay: 5000
+    seriesDelay: 9000
+  }
+
+  {
+    seriesLength: 5
+    delay: 5000
+    seriesDelay: 9000
+  }
+
+  {
+    seriesLength: 5
+    delay: 4500
+    seriesDelay: 8000
+  }
+
+  {
+    seriesLength: 6
+    delay: 4000
+    seriesDelay: 7500
+
+  }
 
   {
     seriesLength: 7
