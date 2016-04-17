@@ -187,7 +187,7 @@ render = ->
 
 queueWaveSeries = ->
   for i in [0...waves.seriesLength]
-    game.time.events.add i * waves.delay, startRandomWave
+    game.time.events.add i * waves.delay, spawnRandomWave
   seriesTime = (waves.seriesLength - 1) * waves.delay
   nextSeriesTime = seriesTime + waves.seriesDelay
   game.time.events.add nextSeriesTime, queueWaveSeries
@@ -203,15 +203,9 @@ incrementWaveSeries = ->
   waves.seriesDelay = s.seriesDelay
   return
 
-startRandomWave = ->
-  num = game.rnd.frac()
-  if num < 0.4
-     startWave [{count: 10, type: 'drifter'}]
-   else if num < 0.7
-     startWave [{count: 3, type: 'strafer'},
-                {count: 3, type: 'drifter'}]
-   else
-     startWave [{count: 12, type: 'charger', interval: 250/12}]
+spawnRandomWave = ->
+  wave = game.rnd.pick waveLibrary
+  startWave wave.data
   return
 
 startWave = (spec) ->
@@ -1168,5 +1162,13 @@ waveProgression = [
     delay: 2000
     seriesDelay: 5000
   }
+
+]
+
+waveLibrary = [
+
+  { data: [{count: 10, type: 'drifter'}]}
+  { data: [{count: 8, type: 'strafer'}]}
+  { data: [{count: 12, type: 'charger', interval: 250 / 12}]}
 
 ]
