@@ -701,9 +701,15 @@ collideEnemiesAndShield = ->
   return
 
 collideEnemiesAndPlayer = ->
-  for enemy in enemies
+  enemiesToKill = {}
+  for enemy, i in enemies
     if enemyTouchingPlayer enemy
-      killPlayer enemy
+      enemiesToKill[i] = true
+      explode enemy, player, enemy.color
+      dead = damagePlayer enemy.contactDamage ? 20, enemy
+      if dead
+        killPlayer enemy
+  removeSetFromArray enemiesToKill, enemies
   return
 
 collideBulletsAndEnemies = ->
@@ -882,6 +888,15 @@ killPlayer = (source) ->
   explode player, source, playerColor, duration: 1000
   game.time.events.add 3000, -> game.state.start 'title'
   return
+
+damagePlayer = (dmg, source) ->
+  # return true if player died to this damage
+  wasAlive = player.alive and player.health > 0
+  player.health -= dmg
+  if player.health < 0 then player.health = 0
+  if source != undefined
+    explode player, source, playerColor, numParticles: 3
+  return wasAlive and player.health <= 0
 
 enemyTouchingShield = (enemy) ->
   switch enemy.bodytype
