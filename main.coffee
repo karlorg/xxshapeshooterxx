@@ -64,6 +64,7 @@ bullets = null
 cursors = null
 deathRays = null
 enemies = null
+enemiesToKill = null
 game = null
 graphics = null
 keys = null
@@ -172,6 +173,7 @@ shutDown = ->
 update = ->
   clearTexts()
 
+  enemiesToKill = {}
   processEnemyMovement()
   processEnemyFire()
   if player.alive
@@ -187,9 +189,13 @@ update = ->
   collideEnemiesAndShield()
   collideDeathRaysAndShield()
   collideBulletsAndEnemies()
+  removeSetFromArray enemiesToKill, enemies
+  enemiesToKill = {}
   if player.alive
     collideDeathRaysAndPlayer()
     collideEnemiesAndPlayer()
+  removeSetFromArray enemiesToKill, enemies
+  enemiesToKill = {}
 
   draw()
   return
@@ -887,23 +893,24 @@ processProjectileMovement = (ary) ->
     ary.splice spent[i], 1
   return
 
+killEnemy = (enemy, index, source) ->
+  enemiesToKill[index] = true
+  explode enemy, source, enemy.color
+  if enemy.score
+    score += enemy.score
+  return
+
 collideEnemiesAndShield = ->
-  enemiesToKill = {}
   for enemy, i in enemies
     if weapons.circle.active and enemyTouchingShield enemy
-      enemiesToKill[i] = true
-      explode enemy, player, enemy.color
-  removeSetFromArray enemiesToKill, enemies
+      killEnemy enemy, i, player
   return
 
 collideEnemiesAndPlayer = ->
-  enemiesToKill = {}
   for enemy, i in enemies
     if enemyTouchingPlayer enemy
-      enemiesToKill[i] = true
-      explode enemy, player, enemy.color
+      killEnemy enemy, i, player
       damagePlayer enemy.contactDamage ? 20, enemy
-  removeSetFromArray enemiesToKill, enemies
   return
 
 collideDeathRaysAndShield = ->
@@ -928,7 +935,6 @@ collideDeathRaysAndPlayer = ->
 
 collideBulletsAndEnemies = ->
   spent = {}
-  dead = {}
   for enemy, ei in enemies
     switch enemy.bodytype
       when 'circle'
@@ -941,11 +947,9 @@ collideBulletsAndEnemies = ->
       if testShape.contains bullet.x, bullet.y
         if bi not in spent
           spent[bi] = true
-        if ei not in dead
-          dead[ei] = true
-          explode enemy, bullet, enemy.color
+        if ei not in enemiesToKill
+          killEnemy enemy, ei, bullet
 
-  removeSetFromArray dead, enemies
   removeSetFromArray spent, bullets
 
   return
@@ -969,6 +973,7 @@ spawnDrifter = ->
     type: 'drifter'
     bodytype: 'circle'
     color: drifterColor
+    score: 3
   }
   {x, y} = getEnemySpawnPoint()
   enemy.x = x
@@ -985,6 +990,7 @@ spawnStrafer = ->
     type: 'strafer'
     bodytype: 'circle'
     color: straferColor
+    score: 5
   }
   {x, y} = getEnemySpawnPoint()
   enemy.x = x
@@ -1008,6 +1014,7 @@ spawnCharger = (wave=null) ->
     type: 'charger'
     bodytype: 'square'
     color: chargerColor
+    score: 1
   }
   {x, y} = getChargerSpawnPoint wave
   enemy.x = x
