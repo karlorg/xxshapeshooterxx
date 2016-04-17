@@ -16,6 +16,7 @@ circleSpeed = 200 / 60
 circleDiameter = 30
 coolingRecovery = 35  # % of energy needed before cooldown expires
 deathRayColor = 0xff0000
+deathRayDamage = 8
 deathRaySpeed = 450 / 60
 drifterDiameter = 40
 drifterSpeed = 250 / 60
@@ -158,6 +159,7 @@ update = ->
   collideEnemiesAndShield()
   collideBulletsAndEnemies()
   if player.alive
+    collideDeathRaysAndPlayer()
     collideEnemiesAndPlayer()
 
   draw()
@@ -706,15 +708,23 @@ collideEnemiesAndPlayer = ->
     if enemyTouchingPlayer enemy
       enemiesToKill[i] = true
       explode enemy, player, enemy.color
-      dead = damagePlayer enemy.contactDamage ? 20, enemy
-      if dead
-        killPlayer enemy
+      damagePlayer enemy.contactDamage ? 20, enemy
   removeSetFromArray enemiesToKill, enemies
   return
 
+collideDeathRaysAndPlayer = ->
+  deathRaysToKill = {}
+  testShape = new Phaser.Circle player.x, player.y, player.radius * 2
+  for deathRay, i in deathRays
+    if testShape.contains deathRay.x, deathRay.y
+      deathRaysToKill[i] = true
+      damagePlayer deathRayDamage, deathRay
+  removeSetFromArray deathRaysToKill, deathRays
+  return
+
 collideBulletsAndEnemies = ->
-  spent = []
-  dead = []
+  spent = {}
+  dead = {}
   for enemy, ei in enemies
     switch enemy.bodytype
       when 'circle'
@@ -726,22 +736,13 @@ collideBulletsAndEnemies = ->
     for bullet, bi in bullets
       if testShape.contains bullet.x, bullet.y
         if bi not in spent
-          spent.push bi
+          spent[bi] = true
         if ei not in dead
-          dead.push ei
+          dead[ei] = true
           explode enemy, bullet, enemy.color
 
-  # remove dead
-  i = dead.length
-  while i > 0
-    i -= 1
-    enemies.splice dead[i], 1
-
-  # remove spent
-  i = spent.length
-  while i > 0
-    i -= 1
-    bullets.splice spent[i], 1
+  removeSetFromArray dead, enemies
+  removeSetFromArray spent, bullets
 
   return
 
@@ -890,13 +891,12 @@ killPlayer = (source) ->
   return
 
 damagePlayer = (dmg, source) ->
-  # return true if player died to this damage
-  wasAlive = player.alive and player.health > 0
   player.health -= dmg
   if player.health < 0 then player.health = 0
-  if source != undefined
-    explode player, source, playerColor, numParticles: 3
-  return wasAlive and player.health <= 0
+  explode player, source, playerColor, numParticles: 3
+  if player.health <= 0
+    killPlayer source
+  return
 
 enemyTouchingShield = (enemy) ->
   switch enemy.bodytype
