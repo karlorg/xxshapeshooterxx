@@ -389,11 +389,12 @@ drawPlayerNPoly = (n, options={}) ->
   skip = options.skip ? 0
   radius = circleDiameter/2
   points = []
+  angle = tau/n
   for i in [0...n]
-    angle = i * tau / (n + skip)
     x = radius * Math.sin angle
     y = - radius * Math.cos angle
     points.push [x, y]
+    angle += (1 + skip) * tau/n
 
   # rotate to player angle
   for point in points
