@@ -997,7 +997,7 @@ spawnStrafer = ->
   enemy.y = y
   enemy.radius = straferDiameter / 2
   enemy.speed = straferSpeed
-  enemy.strafeDir = 1
+  enemy.strafeDir = game.rnd.pick [-1, 1]
   return enemy
 
 getEnemySpawnPoint = ->
