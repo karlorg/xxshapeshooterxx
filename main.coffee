@@ -147,6 +147,7 @@ create = ->
     spawnDelay: 250
     seriesLength: 3
     seriesDelay: 12000
+    seriesNum: 0
     queued: []
   queueWaveSeries()
 
@@ -190,6 +191,17 @@ queueWaveSeries = ->
   seriesTime = (waves.seriesLength - 1) * waves.delay
   nextSeriesTime = seriesTime + waves.seriesDelay
   game.time.events.add nextSeriesTime, queueWaveSeries
+  incrementWaveSeries()
+  return
+
+incrementWaveSeries = ->
+  waves.seriesNum += 1
+  return if waveProgression.length <= waves.seriesNum
+  s = waveProgression[waves.seriesNum]
+  waves.seriesLength = s.seriesLength
+  waves.delay = s.delay
+  waves.seriesDelay = s.seriesDelay
+  return
 
 startRandomWave = ->
   num = game.rnd.frac()
@@ -1086,3 +1098,68 @@ removeSetFromArray = (set, ary) ->
     if i of set
       ary.splice i, 1
   return ary
+
+waveProgression = [
+
+  {
+    seriesLength: 3
+    delay: 7000
+    seriesDelay: 12000
+  }
+
+#  {
+#    seriesLength: 3
+#    delay: 6500
+#    seriesDelay: 11500
+#  }
+#
+#  {
+#    seriesLength: 3
+#    delay: 6000
+#    seriesDelay: 10000
+#  }
+#
+#  {
+#    seriesLength: 4
+#    delay: 5500
+#    seriesDelay: 10000
+#  }
+#
+#  {
+#    seriesLength: 4
+#    delay: 5500
+#    seriesDelay: 9000
+#  }
+#
+#  {
+#    seriesLength: 4
+#    delay: 5000
+#    seriesDelay: 9000
+#  }
+#
+#  {
+#    seriesLength: 5
+#    delay: 5000
+#    seriesDelay: 9000
+#  }
+#
+#  {
+#    seriesLength: 5
+#    delay: 4500
+#    seriesDelay: 8000
+#  }
+#
+#  {
+#    seriesLength: 6
+#    delay: 4000
+#    seriesDelay: 7500
+#
+#  }
+
+  {
+    seriesLength: 7
+    delay: 2000
+    seriesDelay: 5000
+  }
+
+]
