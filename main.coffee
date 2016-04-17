@@ -157,6 +157,7 @@ update = ->
   processDeathRayMovement()
 
   collideEnemiesAndShield()
+  collideDeathRaysAndShield()
   collideBulletsAndEnemies()
   if player.alive
     collideDeathRaysAndPlayer()
@@ -198,6 +199,7 @@ createWeapons = ->
       active: false
       energy: 100
       drain: 50 / 60
+      radius: shieldDiameter / 2
       recharge: 20 / 60
       cooling: false
     }
@@ -710,6 +712,15 @@ collideEnemiesAndPlayer = ->
       explode enemy, player, enemy.color
       damagePlayer enemy.contactDamage ? 20, enemy
   removeSetFromArray enemiesToKill, enemies
+  return
+
+collideDeathRaysAndShield = ->
+  deathRaysToKill = {}
+  testShape = new Phaser.Circle player.x, player.y, weapons.circle.radius * 2
+  for deathRay, i in deathRays
+    if testShape.contains deathRay.x, deathRay.y
+      deathRaysToKill[i] = true
+  removeSetFromArray deathRaysToKill, deathRays
   return
 
 collideDeathRaysAndPlayer = ->
