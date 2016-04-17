@@ -45,8 +45,8 @@ enemies = []
 game = null
 graphics = null
 keys = null
+particles = []
 player = null
-thrustParticles = []
 weapons = {}
 
 window.onload = ->
@@ -112,7 +112,7 @@ update = ->
   processShapeshiftKeys()
   processPlayerMovement()
   # addPlayerThrust()
-  processThrustParticles()
+  processParticles()
   processBulletMovement()
   processDeathRayMovement()
 
@@ -174,13 +174,13 @@ createWeapons = ->
 draw = ->
   graphics.clear()
   drawArenaBounds()
-  drawThrustParticles()
   drawPlayer()
   drawEnemies()
   drawShield()
   drawBullets()
   drawDeathRays()
   drawEnergyLevels()
+  drawParticles()
   return
 
 toScreen = (x, y) ->
@@ -197,13 +197,31 @@ drawArenaBounds = ->
   graphics.drawRect left, top, width, height
   return
 
-drawThrustParticles = ->
+drawParticles = ->
+  for p in particles
+    switch p.type
+      when 'point' then drawPointParticle p
+      when 'poly' then drawPolyParticle p
+  return
+
+drawPointParticle = (p) ->
   graphics.lineStyle 0
-  for particle in thrustParticles
-    graphics.beginFill weaponColor, 1.0
-    {x, y} = toScreen particle.x, particle.y
-    graphics.drawRect x, y, 2, 2
-    graphics.endFill()
+  graphics.beginFill p.color, p.opacity
+  {x, y} = toScreen p.x, p.y
+  graphics.drawRect x, y, 2, 2
+  graphics.endFill()
+  return
+
+drawPolyParticle = (p) ->
+  graphics.lineStyle 0
+  [sx, sy] = p.shape[p.shape.length-1]
+  {x, y} = toScreen sx+p.x, sy+p.y
+  graphics.moveTo x, y
+  graphics.beginFill p.color, p.opacity
+  for [sx, sy] in p.shape
+    {x, y} = toScreen sx+p.x, sy+p.y
+    graphics.lineTo x, y
+  graphics.endFill()
   return
 
 drawPlayer = ->
@@ -592,10 +610,17 @@ addPlayerThrust = ->
         thrustParticles.splice thrustParticles.length-1, 1
   return
 
-processThrustParticles = ->
-  for particle in thrustParticles
-    particle.x += particle.vx
-    particle.y += particle.vy
+processParticles = ->
+  now = Date.now()
+  done = {}
+  for p, i in particles
+    if p.expirationTime < now
+      done[i] = true
+      continue
+    p.x += p.vx
+    p.y += p.vy
+  before = particles.length
+  removeSetFromArray done, particles
   return
 
 processBulletMovement = ->
@@ -740,6 +765,24 @@ getChargerSpawnPoint = ->
         return getEnemySpawnPoint()
         break
   return {x, y}
+
+spawnPointParticle = (x, y, ttl, options) ->
+  {angle, speed, color, opacity} = options
+  if opacity == undefined then opacity = 1
+  p = {type: 'point', x, y, color, opacity, expirationTime: Date.now() + ttl}
+  p.vx = speed * Math.sin angle
+  p.vy = speed * Math.cos angle
+  particles.push p
+  return p
+
+spawnPolyParticle = (x, y, ttl, options) ->
+  {angle, speed, color, shape, opacity} = options
+  if opacity == undefined then opacity = 1
+  p = {type: 'poly', x, y, color, opacity, shape, expirationTime: Date.now() + ttl}
+  p.vx = speed * Math.sin angle
+  p.vy = speed * Math.cos angle
+  particles.push p
+  return p
 
 killPlayer = ->
   player.alive = false
