@@ -71,7 +71,7 @@ waves = null
 weapons = null
 
 window.onload = ->
-  game = new Phaser.Game scrW, scrH, Phaser.AUTO, ''
+  game = new Phaser.Game scrW, scrH, Phaser.AUTO, 'game'
   game.state.add 'play', {
     preload, create, render, shutDown, update
   }
