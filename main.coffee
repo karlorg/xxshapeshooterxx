@@ -863,6 +863,11 @@ straferFire = (strafer) ->
   return
 
 addPlayerThrust = ->
+  spawnThrustParticle 0.5
+  for i in [0...3]
+    spawnThrustParticle 0.1
+
+spawnThrustParticle = (opacity) ->
   angle = player.angle - tau/2 + game.rnd.realInRange (-tau/18), tau/18
   xoff = player.radius * Math.sin angle
   yoff = - player.radius * Math.cos angle
@@ -872,11 +877,11 @@ addPlayerThrust = ->
     thrustParticlesIdleSpeed
   else
     thrustParticlesMaxSpeed
-  spawnPointParticle x, y, 100, {
+  spawnPointParticle x, y, 100 + game.rnd.between(-20, 20), {
     angle: angle
     speed: speed
     color: weaponColor
-    opacity: 0.5
+    opacity: opacity
   }
   return
 
@@ -1136,7 +1141,7 @@ explode = (victim, source, color, options={}) ->
       angle: angle
       speed: speed
       color: color
-      opacity: 1.0
+      opacity: 1.0 - game.rnd.realInRange(0, 0.5)
       shape: shape
   return
 
