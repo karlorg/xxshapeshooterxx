@@ -597,6 +597,7 @@ shootTriangle = ->
     y: player.y
     angle: player.angle
     speed: bulletSpeed
+    color: weaponColor
   }
   bullets.push bullet
   return bullet
@@ -614,6 +615,7 @@ shootStar = ->
     y: player.y
     angle: angleToCursor
     speed: bulletSpeed
+    color: weaponColor
   }
   bullets.push bullet
   return
@@ -854,6 +856,7 @@ straferFire = (strafer) ->
     y: strafer.y
     angle: angleToPlayer
     speed: deathRaySpeed
+    color: deathRayColor
   }
   deathRays.push deathRay
   return
@@ -910,18 +913,20 @@ processDeathRayMovement = ->
   return
 
 processProjectileMovement = (ary) ->
-  spent = []
+  spent = {}
   for proj, i in ary
     proj.x += proj.speed * Math.sin proj.angle
     proj.y -= proj.speed * Math.cos proj.angle
     if (proj.x <= 0 or proj.x >= 1000 or
         proj.y <= 0 or proj.y >= 1000)
-      spent.push i
-  # remove spent
-  i = spent.length
-  while i > 0
-    i -= 1
-    ary.splice spent[i], 1
+      spent[i] = true
+    for j in [0...4]
+      spawnPointParticle proj.x + game.rnd.realInRange(-4, 4),
+                         proj.y + game.rnd.realInRange(-4, 4),
+                         100,
+                         color: proj.color, opacity: 0.1,
+                         angle: 0, speed: 0
+  removeSetFromArray spent, ary
   return
 
 killEnemy = (enemy, index, source) ->
