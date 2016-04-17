@@ -120,6 +120,7 @@ update = ->
 
   collideEnemiesAndShield()
   collideBulletsAndEnemies()
+  collideEnemiesAndPlayer()
 
   draw()
   return
@@ -643,9 +644,14 @@ collideEnemiesAndShield = ->
   for enemy, i in enemies
     if weapons.circle.active and enemyTouchingShield enemy
       enemiesToKill[i] = true
-    else if enemyTouchingPlayer enemy
-      killPlayer()
   removeSetFromArray enemiesToKill, enemies
+  return
+
+collideEnemiesAndPlayer = ->
+  for enemy in enemies
+    if enemyTouchingPlayer enemy
+      killPlayer()
+  return
 
 collideBulletsAndEnemies = ->
   spent = []
