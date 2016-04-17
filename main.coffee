@@ -501,6 +501,7 @@ drawShield = ->
   return
 
 drawHud = ->
+  return unless player.alive
   width = player.radius * 3
   left = player.x - player.radius * 1.5
   y = player.y + player.radius * 1.2
