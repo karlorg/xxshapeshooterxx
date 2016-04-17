@@ -798,3 +798,11 @@ shiftToTriangle = ->
   player.mode = 'triangle'
   weapons.circle.active = false
   return
+
+removeSetFromArray = (set, ary) ->
+  i = ary.length
+  while i > 0
+    i -= 1
+    if i of set
+      ary.splice i, 1
+  return ary
