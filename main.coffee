@@ -35,7 +35,7 @@ straferMinDistance = 250
 straferMaxDistance = 300
 straferSpeed = 150 / 60
 tau = 2 * Math.PI
-triangleAccel = 30 / 60
+triangleAccel = 15 / 60
 triangleMaxSpeed = 600 / 60
 triangleTurnRate = (tau/2) / 60
 waveDelay = 7000
@@ -204,6 +204,8 @@ createWeapons = ->
       cooling: false
     }
     weapons[name] = weapon
+  weapons.triangle.recharge = 10 / 60
+  weapons.triangle.drain = 80 / 60
   return
 
 draw = ->
