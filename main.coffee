@@ -832,6 +832,18 @@ processParticles = ->
       continue
     p.x += p.vx
     p.y += p.vy
+    if p.x < 0
+      p.vx *= -1
+      p.x = 0
+    if p.x > 1000
+      p.vx *= -1
+      p.x = 1000
+    if p.y < 0
+      p.vy *= -1
+      p.y = 0
+    if p.y > 1000
+      p.vy *= -1
+      p.y = 1000
   before = particles.length
   removeSetFromArray done, particles
   return
