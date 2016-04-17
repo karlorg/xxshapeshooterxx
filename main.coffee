@@ -15,6 +15,10 @@ circleInertia = 0.85
 circleSpeed = 200 / 60
 circleDiameter = 30
 coolingRecovery = 35  # % of energy needed before cooldown expires
+crosshairColor = 0xffffff
+crosshairInactiveColor = 0xed4588
+crosshairOuterRadius = 16  # in screen coords
+crosshairInnerRadius = 11  # in screen coords
 deathRayColor = 0xff0000
 deathRayDamage = 8
 deathRaySpeed = 450 / 60
@@ -220,6 +224,7 @@ draw = ->
   drawHealthBar()
   drawEnergyLevels()
   drawParticles()
+  drawCrosshair()
   return
 
 toScreen = (x, y) ->
@@ -261,6 +266,24 @@ drawPolyParticle = (p) ->
     {x, y} = toScreen sx+p.x, sy+p.y
     graphics.lineTo x, y
   graphics.endFill()
+  return
+
+drawCrosshair = ->
+  {x: sx, y: sy} = game.input.activePointer
+  return if (sx < arenaBounds.left or sx > arenaBounds.right or
+             sy < arenaBounds.top or sy > arenaBounds.bottom)
+  color = switch player.mode
+    when 'star' then crosshairColor
+    else crosshairInactiveColor
+  opacity = switch player.mode
+    when 'star' then 0.8
+    else 0.05
+  graphics.lineStyle 2, color, opacity
+  graphics.moveTo sx - crosshairOuterRadius, sy
+  graphics.lineTo sx + crosshairOuterRadius, sy
+  graphics.moveTo sx, sy - crosshairOuterRadius
+  graphics.lineTo sx, sy + crosshairOuterRadius
+  graphics.drawCircle sx, sy, crosshairInnerRadius * 2
   return
 
 drawPlayer = ->
