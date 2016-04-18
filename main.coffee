@@ -160,9 +160,18 @@ titleState =
     game.add.text 80, 140, 'because you know the name "ShapeShooter" has gotta be taken',
                   {font: "16px Arial", fill: "#ffffff"}
 
-    @startButton = game.add.button 80, scrH-80-64, 'start button',
+    game.add.text 4, scrH-60, 'design and code by Karl Naylor',
+                  {font: "16px Arial", fill: "#ffffff"}
+
+    game.add.text 4, scrH-40, 'music by Thomas Collins',
+                  {font: "16px Arial", fill: "#ffffff"}
+
+    game.add.text 4, scrH-20, 'sound effects based on originals by Thomas Collins',
+                  {font: "16px Arial", fill: "#ffffff"}
+
+    @startButton = game.add.button 80, scrH-140-64, 'start button',
                                    @startButtonClick, this
-    @howtoplayButton = game.add.button 80, scrH/2 - 32, 'howtoplay button',
+    @howtoplayButton = game.add.button 80, scrH/2 - 30 - 32, 'howtoplay button',
                                        @howtoplayButtonClick, this
 
     soundIconButton = game.add.button scrW-80-50, scrH-80-35, 'sound icon',
