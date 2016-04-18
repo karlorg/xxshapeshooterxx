@@ -83,6 +83,7 @@ musicSound = null
 particles = null
 pewSounds = null
 player = null
+playerDeathSound = null
 playerHitSound = null
 score = null
 shieldSound = null
@@ -108,6 +109,7 @@ loadState =
     game.load.audio 'pew1', 'assets/pew1.mp3'
     game.load.audio 'pew2', 'assets/pew2.mp3'
     game.load.audio 'pew3', 'assets/pew3.mp3'
+    game.load.audio 'playerdeath', 'assets/playerdeath.mp3'
     game.load.audio 'playerhit', 'assets/playerhit.mp3'
     game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
     game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
@@ -179,6 +181,7 @@ create = ->
   pewSounds[1] = game.add.audio 'pew1'
   pewSounds[2] = game.add.audio 'pew2'
   pewSounds[3] = game.add.audio 'pew3'
+  playerDeathSound = game.add.audio 'playerdeath'
   playerHitSound = game.add.audio 'playerhit'
   enemyHitSounds = []
   enemyHitSounds[0] = game.add.audio 'enemyhit0'
@@ -193,6 +196,7 @@ create = ->
   allSounds.push pewSounds[1]
   allSounds.push pewSounds[2]
   allSounds.push pewSounds[3]
+  allSounds.push playerDeathSound
   allSounds.push playerHitSound
   allSounds.push enemyHitSounds[0]
   allSounds.push enemyHitSounds[1]
@@ -826,6 +830,7 @@ processTriangleMovement = ->
   return
 
 adjustEngineSound = ->
+  return unless player.alive
   switch player.mode
     when 'circle', 'star' then adjustEngineSoundCircle()
     when 'triangle' then adjustEngineSoundTriangle()
@@ -1277,6 +1282,8 @@ killPlayer = (source) ->
   source ?= { x: player.x, y: player.y, vx: 0, vy: 0 }
   explode player, source, playerColor, duration: 1000
   game.time.events.add 3000, -> game.state.start 'title'
+  playerDeathSound.play()
+  engineSound.fadeOut 200
   musicSound.fadeOut 3000
   return
 
