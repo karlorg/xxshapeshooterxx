@@ -125,7 +125,6 @@ loadState =
     game.load.image 'htp OK button', 'assets/htp OK button.png'
     return
   create: ->
-    game.sound.mute = true
     musicSound = game.add.sound 'music', 0, true
     musicSound.onDecoded.add ->
       musicSound.play null, null, 0
@@ -1528,9 +1527,13 @@ waveProgression = [
 
 waveLibrary = [
 
-  { data: [{count: 10, type: 'drifter'}]}
-  { data: [{count: 8, type: 'strafer'}]}
+  { data: [{count: 3, type: 'drifter', interval: 250 / 12},
+           {count: 5, type: 'strafer'}]}
+  { data: [{count: 6, type: 'drifter', interval: 250 / 12},
+           {count: 3, type: 'strafer'}]}
   { data: [{count: 12, type: 'charger', interval: 250 / 12},
            {count: 3, type: 'drifter'}]}
+  { data: [{count: 9, type: 'charger', interval: 250 / 12},
+           {count: 3, type: 'strafer'}]}
 
 ]
