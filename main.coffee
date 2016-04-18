@@ -82,6 +82,8 @@ particles = null
 pewSounds = null
 player = null
 score = null
+shieldSound = null
+shieldSoundWasPlaying = null
 texts = null
 waves = null
 weapons = null
@@ -105,6 +107,7 @@ loadState =
     game.load.audio 'pew3', 'assets/pew3.mp3'
     game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
     game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
+    game.load.audio 'shield sound', 'assets/shieldloop.mp3'
     return
   create: ->
     game.state.start 'play'
@@ -170,6 +173,8 @@ create = ->
   enemyHitSounds = []
   enemyHitSounds[0] = game.add.audio 'enemyhit0'
   enemyHitSounds[1] = game.add.audio 'enemyhit1'
+  shieldSound = game.add.audio 'shield sound', 0, true
+  shieldSoundWasPlaying = false
 
   game.stage.backgroundColor = 'rgb(12, 24, 32)'
 
@@ -214,6 +219,7 @@ update = ->
   processEnemyFire()
   if player.alive
     processWeaponFire()
+    updateShieldSound()
     processWeaponEnergy()
     processShapeshiftKeys()
     processPlayerMovement()
@@ -681,6 +687,18 @@ playPew = ->
       pew.play null, null, 0.4 + 0.6*energy/100
     else
       pew.stop()
+  return
+
+updateShieldSound = ->
+  if weapons.circle.active
+    if not shieldSound.isPlaying
+      shieldSound.play null, null, 0
+      shieldSound.fadeTo 200, 0.5
+      shieldSoundWasPlaying = true
+  else  # shield off
+    if shieldSoundWasPlaying
+      shieldSoundWasPlaying = false
+      shieldSound.fadeTo 200, 0
   return
 
 playerSaysLeft = -> cursors.left.isDown or keys.left.isDown
