@@ -1310,7 +1310,7 @@ collideBulletsAndEnemies = ->
                                          enemy.radius*2, enemy.radius*2)
     for bullet, bi in bullets
       if testShape.contains bullet.x, bullet.y
-        if bi not in spent
+        if bi not of spent
           spent[bi] = true
         if ei not in enemiesToKill
           killEnemy enemy, ei, bullet
