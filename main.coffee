@@ -38,6 +38,7 @@ healthColor = 0x83f765
 healthDiameter = 20
 healthDropChance = 1/24
 healthSpeed = 40/60
+invincibleDuration = 500  # ms
 playerColor = 0xffff0b
 scoreMultTimeLimit = 1000  # ms before multiplier is lost
 scrW = 800
@@ -313,6 +314,7 @@ create = ->
     health: 100
     radius: circleDiameter / 2
     angle: 0  # clockwise from top
+    invincible: 0
   }
 
   createWeapons()
@@ -1533,12 +1535,16 @@ killPlayer = (source) ->
   return
 
 damagePlayer = (dmg, source) ->
+  return if player.invincible > 0
   player.health -= dmg
   if player.health < 0 then player.health = 0
   explode player, source, playerColor, numParticles: 3, scale: 0.4
   playerHitSound.play()
   if player.health <= 0
     killPlayer source
+  else
+    player.invincible += 1
+    game.time.events.add invincibleDuration, -> player.invincible -= 1
   return
 
 healPlayer = (gain) ->
