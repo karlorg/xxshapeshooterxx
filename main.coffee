@@ -1148,6 +1148,7 @@ killEnemy = (enemy, index, source) ->
   playEnemyHit()
   if enemy.score
     score += enemy.score
+    addFloatingText enemy.x, enemy.y, "#{enemy.score}"
   return
 
 collideEnemiesAndShield = ->
@@ -1351,6 +1352,16 @@ explode = (victim, source, color, options={}) ->
       color: color
       opacity: 1.0 - game.rnd.realInRange(0, 0.5)
       shape: shape
+  return
+
+addFloatingText = (x, y, str) ->
+  {x: sx, y: sy} = toScreen x, y
+  text = game.add.text sx, sy, str,
+                       {font: "15px Arial", fill: "#ffffff"}
+  game.add.tween(text).to(
+    { y: sy-32 }, 1000, null, true
+  )
+  game.time.events.add 1000, -> text.destroy()
   return
 
 killPlayer = (source) ->
