@@ -21,7 +21,7 @@ crosshairInactiveColor = 0x444444
 crosshairInactiveOpacity = 0.5
 crosshairOuterRadius = 16  # in screen coords
 crosshairInnerRadius = 11  # in screen coords
-deathRayColor = 0xff0000
+deathRayColor = 0xf75c75
 deathRayDamage = 8
 deathRaySpeed = 450 / 60
 drifterDiameter = 40
@@ -554,7 +554,7 @@ drawDeathRays = ->
   for deathRay in deathRays
     graphics.beginFill deathRayColor, 1.0
     {x, y} = toScreen deathRay.x, deathRay.y
-    graphics.drawRect x, y, 2, 2
+    graphics.drawRect x-1, y-1, 3, 3
     graphics.endFill()
   return
 
