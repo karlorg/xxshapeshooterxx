@@ -32,6 +32,7 @@ engineVolumeMin = 0.2
 engineVolumeMax = 1.0
 healthColor = 0x83f765
 playerColor = 0xffff0b
+scoreMultTimeLimit = 1000  # ms before multiplier is lost
 scrW = 800
 scrH = 600
 shieldDiameter = 50
@@ -85,6 +86,7 @@ pewSounds = null
 player = null
 playerDeathSound = null
 playerHitSound = null
+recentScoring = null
 score = null
 shapeshiftSound = null
 shieldSound = null
@@ -303,6 +305,10 @@ create = ->
   createWeapons()
 
   score = 0
+  recentScoring =
+    count: 0
+    lastScoreTime: 0
+    multiplier: 1
 
   waves =
     delay: 5000
@@ -1152,13 +1158,30 @@ processProjectileMovement = (ary) ->
   removeSetFromArray spent, ary
   return
 
+addPoints = (pointsScored) ->
+  last = recentScoring.lastScoreTime
+  now = Date.now()
+  recentScoring.lastScoreTime = now
+  if now - last < scoreMultTimeLimit
+    recentScoring.count += 1
+  else
+    recentScoring.count = 1
+  updateMultiplier()
+  pointsWithMult = pointsScored * recentScoring.multiplier
+  score += pointsWithMult
+  return pointsWithMult
+
+updateMultiplier = ->
+  recentScoring.multiplier = Math.ceil recentScoring.count/8
+  return
+
 killEnemy = (enemy, index, source) ->
   enemiesToKill[index] = true
   explode enemy, source, enemy.color
   playEnemyHit()
   if enemy.score
-    score += enemy.score
-    addFloatingText enemy.x, enemy.y, "#{enemy.score}"
+    scored = addPoints enemy.score
+    addFloatingText enemy.x, enemy.y, "#{scored}"
   return
 
 collideEnemiesAndShield = ->
@@ -1529,10 +1552,13 @@ waveLibrary = [
 
   { data: [{count: 3, type: 'drifter', interval: 250 / 12},
            {count: 5, type: 'strafer'}]}
+
   { data: [{count: 6, type: 'drifter', interval: 250 / 12},
            {count: 3, type: 'strafer'}]}
+
   { data: [{count: 12, type: 'charger', interval: 250 / 12},
            {count: 3, type: 'drifter'}]}
+
   { data: [{count: 9, type: 'charger', interval: 250 / 12},
            {count: 3, type: 'strafer'}]}
 
