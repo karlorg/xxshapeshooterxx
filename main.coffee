@@ -157,6 +157,8 @@ titleState =
   create: ->
     game.add.text 80, 80, "xXShapeShooterXx",
                   {font: "50px Arial", fill: "#ffffff"}
+    game.add.text 80, 140, 'because you know the name "ShapeShooter" has gotta be taken',
+                  {font: "16px Arial", fill: "#ffffff"}
 
     @startButton = game.add.button 80, scrH-80-64, 'start button',
                                    @startButtonClick, this
