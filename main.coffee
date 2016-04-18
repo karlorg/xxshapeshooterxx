@@ -123,6 +123,27 @@ loadState =
     return
   create: ->
     game.sound.mute = true
+    musicSound = game.add.sound 'music', 0, true
+    musicSound.onDecoded.add ->
+      musicSound.play null, null, 0
+      musicSound.fadeTo 1000, 0.3
+
+    engineSound = game.add.audio 'engine sound', 0, true
+    engineSound.onDecoded.add ->
+      engineSound.play null, 0, 0.0
+    pewSounds = []
+    pewSounds[0] = game.add.audio 'pew0'
+    pewSounds[1] = game.add.audio 'pew1'
+    pewSounds[2] = game.add.audio 'pew2'
+    pewSounds[3] = game.add.audio 'pew3'
+    playerDeathSound = game.add.audio 'playerdeath'
+    playerHitSound = game.add.audio 'playerhit'
+    shapeshiftSound = game.add.audio 'shapeshift sound'
+    enemyHitSounds = []
+    enemyHitSounds[0] = game.add.audio 'enemyhit0'
+    enemyHitSounds[1] = game.add.audio 'enemyhit1'
+    shieldSound = game.add.audio 'shield sound', 0, true
+
     game.state.start 'title'
     return
   update: ->
@@ -141,17 +162,14 @@ titleState =
     soundIconButton = game.add.button scrW-80-50, scrH-80-35, 'sound icon',
                                       @soundIconClick, this
     @setSoundIconState()
-    musicSound = game.add.sound 'music', 0, true
-    musicSound.onDecoded.add ->
-      musicSound.play null, null, 0
-      musicSound.fadeTo 1000, 0.3
+    musicSound.fadeTo 1000, 0.3
     return
 
   update: ->
   render: ->
 
   shutDown: ->
-    musicSound.fadeOut 200
+    musicSound.stop()
 
   setSoundIconState: ->
     soundIconButton.frame = switch game.sound.mute
@@ -200,31 +218,13 @@ create = ->
   fkey = game.input.keyboard.addKey Phaser.Keyboard.F
   game.input.mouse.capture = true
 
-  musicSound = game.add.audio 'music', 0, true
-  musicSound.onDecoded.add ->
-    musicSound.play null, null, 0
-    musicSound.fadeTo 1000, 1.0
-  engineSound = game.add.audio 'engine sound', 0, true
-  engineSound.onDecoded.add ->
-    engineSound.play null, 0, 0.0
-    engineSound.fadeTo 500, engineVolumeMin
-  pewSounds = []
-  pewSounds[0] = game.add.audio 'pew0'
-  pewSounds[1] = game.add.audio 'pew1'
-  pewSounds[2] = game.add.audio 'pew2'
-  pewSounds[3] = game.add.audio 'pew3'
-  playerDeathSound = game.add.audio 'playerdeath'
-  playerHitSound = game.add.audio 'playerhit'
-  shapeshiftSound = game.add.audio 'shapeshift sound'
-  enemyHitSounds = []
-  enemyHitSounds[0] = game.add.audio 'enemyhit0'
-  enemyHitSounds[1] = game.add.audio 'enemyhit1'
-  shieldSound = game.add.audio 'shield sound', 0, true
+  musicSound.fadeTo 1000, 0.7
+  engineSound.fadeTo 500, engineVolumeMin
   shieldSoundWasPlaying = false
 
   allSounds = []
-  allSounds.push musicSound
-  allSounds.push engineSound
+  # don't push musicSound, it needs to stay alive on the title screen
+  # nor engineSound
   allSounds.push pewSounds[0]
   allSounds.push pewSounds[1]
   allSounds.push pewSounds[2]
@@ -268,6 +268,7 @@ create = ->
 
 shutDown = ->
   game.time.events.removeAll()
+  engineSound.fadeTo 200, 0
   for snd in allSounds
     snd.stop()
   return
