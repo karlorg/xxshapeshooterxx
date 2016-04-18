@@ -201,10 +201,10 @@ create = ->
 
   cursors = game.input.keyboard.createCursorKeys()
   keys = game.input.keyboard.addKeys
-    left: Phaser.KeyCode.A
-    right: Phaser.KeyCode.S
     up: Phaser.KeyCode.W
-    down: Phaser.KeyCode.R
+    left: Phaser.KeyCode.A
+    down: Phaser.KeyCode.S
+    right: Phaser.KeyCode.D
     1: Phaser.KeyCode.ONE
     2: Phaser.KeyCode.TWO
     3: Phaser.KeyCode.THREE
