@@ -86,6 +86,7 @@ player = null
 playerDeathSound = null
 playerHitSound = null
 score = null
+shapeshiftSound = null
 shieldSound = null
 shieldSoundWasPlaying = null
 texts = null
@@ -104,6 +105,8 @@ window.onload = ->
 
 loadState =
   preload: ->
+    game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
+    game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
     game.load.audio 'engine sound', 'assets/Engine Sound loop.mp3'
     game.load.audio 'pew0', 'assets/pew0.mp3'
     game.load.audio 'pew1', 'assets/pew1.mp3'
@@ -111,10 +114,9 @@ loadState =
     game.load.audio 'pew3', 'assets/pew3.mp3'
     game.load.audio 'playerdeath', 'assets/playerdeath.mp3'
     game.load.audio 'playerhit', 'assets/playerhit.mp3'
-    game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
-    game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
-    game.load.audio 'shield sound', 'assets/shieldloop.mp3'
     game.load.audio 'music', 'assets/music.mp3'
+    game.load.audio 'shapeshift sound', 'assets/shapeshift.mp3'
+    game.load.audio 'shield sound', 'assets/shieldloop.mp3'
     return
   create: ->
     game.state.start 'play'
@@ -183,6 +185,7 @@ create = ->
   pewSounds[3] = game.add.audio 'pew3'
   playerDeathSound = game.add.audio 'playerdeath'
   playerHitSound = game.add.audio 'playerhit'
+  shapeshiftSound = game.add.audio 'shapeshift sound'
   enemyHitSounds = []
   enemyHitSounds[0] = game.add.audio 'enemyhit0'
   enemyHitSounds[1] = game.add.audio 'enemyhit1'
@@ -742,12 +745,15 @@ processEnemyFire = ->
   return
 
 processShapeshiftKeys = ->
+  startMode = player.mode
   if keys[1].isDown
     shiftToCircle()
   else if keys[2].isDown
     shiftToTriangle()
   else if keys[3].isDown
     shiftToStar()
+  if player.mode != startMode
+    shapeshiftSound.play null, null, 0.9
   return
 
 processPlayerMovement = ->
