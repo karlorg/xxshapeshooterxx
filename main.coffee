@@ -100,6 +100,7 @@ window.onload = ->
     preload, create, render, shutDown, update
   }
   game.state.add 'title', titleState
+  game.state.add 'howtoplay', howtoplayState
   game.state.add 'load', loadState
   game.state.start 'load'
   return
@@ -120,6 +121,8 @@ loadState =
     game.load.audio 'shield sound', 'assets/shieldloop.mp3'
     game.load.spritesheet 'sound icon', 'assets/sound icon.png', 50, 35
     game.load.image 'start button', 'assets/start button.png'
+    game.load.image 'howtoplay button', 'assets/howtoplay button.png'
+    game.load.image 'htp OK button', 'assets/htp OK button.png'
     return
   create: ->
     game.sound.mute = true
@@ -157,8 +160,9 @@ titleState =
 
     @startButton = game.add.button 80, scrH-80-64, 'start button',
                                    @startButtonClick, this
+    @howtoplayButton = game.add.button 80, scrH/2 - 32, 'howtoplay button',
+                                       @howtoplayButtonClick, this
 
-    # game.input.onTap.add -> game.state.start 'play'
     soundIconButton = game.add.button scrW-80-50, scrH-80-35, 'sound icon',
                                       @soundIconClick, this
     @setSoundIconState()
@@ -170,6 +174,9 @@ titleState =
 
   shutDown: ->
     musicSound.stop()
+
+  howtoplayButtonClick: ->
+    game.state.start 'howtoplay'
 
   setSoundIconState: ->
     soundIconButton.frame = switch game.sound.mute
@@ -184,6 +191,38 @@ titleState =
 
   startButtonClick: ->
     game.state.start 'play'
+
+howtoplayState =
+  preload: ->
+  create: ->
+    y = 80
+    addLine = (size, text) ->
+      game.add.text 40, y, text,
+                    {font: "#{size}px Arial", fill: "#ffffff"}
+      y += size * 1.2
+    addSpacing = (size) -> y += size
+
+    addLine 50, "How to play xXShapeShooterXx"
+    addSpacing 30
+    addLine 24, "Move your craft with WASD."
+    addLine 16, "(specific control method may vary with craft shape)"
+    addSpacing 30
+    addLine 24, "Shoot your weapons with the left mouse button."
+    addLine 16, '(the meaning of "shoot" may vary with craft shape)'
+    addSpacing 30
+    addLine 24, "Shift to other shapes with 1, 2 and 3."
+    addLine 16, '(craft shape may vary with craft shape)'
+    @okButton = game.add.button 40, scrH-80-64, 'htp OK button',
+                                @okButtonClick, this
+
+    return
+
+  update: ->
+  render: ->
+
+  okButtonClick: ->
+    game.state.start 'title'
+
 
 preload = ->
   return
