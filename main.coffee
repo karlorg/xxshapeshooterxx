@@ -1181,7 +1181,8 @@ killEnemy = (enemy, index, source) ->
   playEnemyHit()
   if enemy.score
     scored = addPoints enemy.score
-    addFloatingText enemy.x, enemy.y, "#{scored}"
+    textScale = 1 + game.math.clamp(recentScoring.multiplier/5, 0, 1)
+    addFloatingText enemy.x, enemy.y, "#{scored}", scale: textScale
   return
 
 collideEnemiesAndShield = ->
@@ -1387,10 +1388,12 @@ explode = (victim, source, color, options={}) ->
       shape: shape
   return
 
-addFloatingText = (x, y, str) ->
+addFloatingText = (x, y, str, options={}) ->
+  scale = options.scale ? 1
+  size = 15 * scale
   {x: sx, y: sy} = toScreen x, y
   text = game.add.text sx, sy, str,
-                       {font: "15px Arial", fill: "#ffffff"}
+                       {font: "#{size}px Arial", fill: "#ffffff"}
   game.add.tween(text).to(
     { y: sy-32 }, 1000, null, true
   )
