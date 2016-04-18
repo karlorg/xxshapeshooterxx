@@ -68,6 +68,7 @@ wavePreviewLeft = barsLeft
 wavePreviewRight = barsRight
 wavePreviewTop = energyBarsTop + 3 * energyBarsSpacing
 
+allSounds = null
 bullets = null
 cursors = null
 deathRays = null
@@ -78,6 +79,7 @@ engineSound = null
 game = null
 graphics = null
 keys = null
+musicSound = null
 particles = null
 pewSounds = null
 player = null
@@ -108,6 +110,7 @@ loadState =
     game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
     game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
     game.load.audio 'shield sound', 'assets/shieldloop.mp3'
+    game.load.audio 'music', 'assets/music.mp3'
     return
   create: ->
     game.state.start 'play'
@@ -161,6 +164,10 @@ create = ->
   fkey = game.input.keyboard.addKey Phaser.Keyboard.F
   game.input.mouse.capture = true
 
+  musicSound = game.add.audio 'music', 0, true
+  musicSound.onDecoded.add ->
+    musicSound.play null, null, 0
+    musicSound.fadeTo 1000, 1.0
   engineSound = game.add.audio 'engine sound', 0, true
   engineSound.onDecoded.add ->
     engineSound.play null, 0, 0.0
@@ -175,6 +182,17 @@ create = ->
   enemyHitSounds[1] = game.add.audio 'enemyhit1'
   shieldSound = game.add.audio 'shield sound', 0, true
   shieldSoundWasPlaying = false
+
+  allSounds = []
+  allSounds.push musicSound
+  allSounds.push engineSound
+  allSounds.push pewSounds[0]
+  allSounds.push pewSounds[1]
+  allSounds.push pewSounds[2]
+  allSounds.push pewSounds[3]
+  allSounds.push enemyHitSounds[0]
+  allSounds.push enemyHitSounds[1]
+  allSounds.push shieldSound
 
   game.stage.backgroundColor = 'rgb(12, 24, 32)'
 
@@ -209,6 +227,8 @@ create = ->
 
 shutDown = ->
   game.time.events.removeAll()
+  for snd in allSounds
+    snd.stop()
   return
 
 update = ->
@@ -219,12 +239,12 @@ update = ->
   processEnemyFire()
   if player.alive
     processWeaponFire()
-    updateShieldSound()
     processWeaponEnergy()
     processShapeshiftKeys()
     processPlayerMovement()
-    adjustEngineSound()
     addPlayerThrust()
+  adjustEngineSound()
+  updateShieldSound()
   processParticles()
   processBulletMovement()
   processDeathRayMovement()
@@ -1253,6 +1273,7 @@ killPlayer = (source) ->
   source ?= { x: player.x, y: player.y, vx: 0, vy: 0 }
   explode player, source, playerColor, duration: 1000
   game.time.events.add 3000, -> game.state.start 'title'
+  musicSound.fadeOut 3000
   return
 
 damagePlayer = (dmg, source) ->
