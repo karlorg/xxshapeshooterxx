@@ -83,6 +83,7 @@ musicSound = null
 particles = null
 pewSounds = null
 player = null
+playerHitSound = null
 score = null
 shieldSound = null
 shieldSoundWasPlaying = null
@@ -107,6 +108,7 @@ loadState =
     game.load.audio 'pew1', 'assets/pew1.mp3'
     game.load.audio 'pew2', 'assets/pew2.mp3'
     game.load.audio 'pew3', 'assets/pew3.mp3'
+    game.load.audio 'playerhit', 'assets/playerhit.mp3'
     game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
     game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
     game.load.audio 'shield sound', 'assets/shieldloop.mp3'
@@ -177,6 +179,7 @@ create = ->
   pewSounds[1] = game.add.audio 'pew1'
   pewSounds[2] = game.add.audio 'pew2'
   pewSounds[3] = game.add.audio 'pew3'
+  playerHitSound = game.add.audio 'playerhit'
   enemyHitSounds = []
   enemyHitSounds[0] = game.add.audio 'enemyhit0'
   enemyHitSounds[1] = game.add.audio 'enemyhit1'
@@ -190,6 +193,7 @@ create = ->
   allSounds.push pewSounds[1]
   allSounds.push pewSounds[2]
   allSounds.push pewSounds[3]
+  allSounds.push playerHitSound
   allSounds.push enemyHitSounds[0]
   allSounds.push enemyHitSounds[1]
   allSounds.push shieldSound
@@ -1280,6 +1284,7 @@ damagePlayer = (dmg, source) ->
   player.health -= dmg
   if player.health < 0 then player.health = 0
   explode player, source, playerColor, numParticles: 3, scale: 0.4
+  playerHitSound.play()
   if player.health <= 0
     killPlayer source
   return
