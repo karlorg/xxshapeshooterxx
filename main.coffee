@@ -1510,10 +1510,12 @@ explode = (victim, source, color, options={}) ->
 
 addFloatingText = (x, y, str, options={}) ->
   scale = options.scale ? 1
+  color = options.color ? 0xffffff
+  fill = "##{color.toString(16)}"
   size = 15 * scale
   {x: sx, y: sy} = toScreen x, y
   text = game.add.text sx, sy, str,
-                       {font: "#{size}px Arial", fill: "#ffffff"}
+                       {font: "#{size}px Arial", fill: fill}
   game.add.tween(text).to(
     { y: sy-32 }, 1000, null, true
   )
@@ -1554,6 +1556,8 @@ damagePlayer = (dmg, source) ->
 healPlayer = (gain) ->
   player.health += gain
   if player.health > 100 then player.health = 100
+  addFloatingText player.x, player.y - player.radius * 0.5,
+                  "#{gain}", color: healthColor
   healthSound.play()
   return
 
