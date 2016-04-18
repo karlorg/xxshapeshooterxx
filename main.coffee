@@ -178,6 +178,8 @@ titleState =
     soundIconButton = game.add.button scrW-80-50, scrH-80-35, 'sound icon',
                                       @soundIconClick, this
     @setSoundIconState()
+    musicSound.stop()
+    musicSound.play null, null, 0, true
     musicSound.fadeTo 1000, 0.3
     return
 
@@ -185,7 +187,7 @@ titleState =
   render: ->
 
   shutDown: ->
-    musicSound.stop()
+    musicSound.fadeTo 1, 0.0
 
   howtoplayButtonClick: ->
     game.state.start 'howtoplay'
@@ -269,6 +271,8 @@ create = ->
   fkey = game.input.keyboard.addKey Phaser.Keyboard.F
   game.input.mouse.capture = true
 
+  musicSound.stop()
+  musicSound.play null, null, 0, true
   musicSound.fadeTo 1000, 0.7
   engineSound.fadeTo 500, engineVolumeMin
   shieldSoundWasPlaying = false
@@ -1407,7 +1411,7 @@ killPlayer = (source) ->
   game.time.events.add 3000, -> game.state.start 'title'
   playerDeathSound.play()
   engineSound.fadeOut 200
-  musicSound.fadeOut 3000
+  musicSound.fadeTo 1, 0
   return
 
 damagePlayer = (dmg, source) ->
