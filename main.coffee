@@ -1294,7 +1294,8 @@ collideHealthAndPlayer = ->
   healthDropsToKill = {}
   testShape = new Phaser.Circle player.x, player.y, player.radius * 2
   for healthDrop, i in healthDrops
-    if testShape.contains healthDrop.x, healthDrop.y
+    if doCirclesIntersect(healthDrop.x, healthDrop.y, healthDrop.radius,
+                          player.x, player.y, player.radius)
       healthDropsToKill[i] = true
       healPlayer 20
   removeSetFromArray healthDropsToKill, healthDrops
@@ -1569,7 +1570,7 @@ enemyTouchingPlayer = (enemy) ->
   switch enemy.bodytype
     when 'circle'
       doCirclesIntersect enemy.x, enemy.y, enemy.radius,
-                         player.x, player.y, shieldDiameter / 2
+                         player.x, player.y, player.radius
     when 'square'
       left = enemy.x - enemy.radius
       right = enemy.x + enemy.radius
