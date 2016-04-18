@@ -28,6 +28,8 @@ drifterDiameter = 40
 drifterSpeed = 250 / 60
 drifterColor = 0xed4588
 enemyColor = 0xed4588
+engineVolumeMin = 0.2
+engineVolumeMax = 1.0
 healthColor = 0x83f765
 playerColor = 0xffff0b
 scrW = 800
@@ -52,6 +54,9 @@ weaponDepletedColor = 0x117788
 weaponCooldownColor = 0xed4588
 weaponCooldownDepletedColor = 0x802244
 
+# speed at which engine volume maxes out
+engineMaxAtSpeed = triangleMaxSpeed
+
 barsLeft = 620
 barsRight = 780
 barsThickness = 4
@@ -68,6 +73,7 @@ cursors = null
 deathRays = null
 enemies = null
 enemiesToKill = null
+engineSound = null
 game = null
 graphics = null
 keys = null
@@ -84,8 +90,19 @@ window.onload = ->
     preload, create, render, shutDown, update
   }
   game.state.add 'title', titleState
-  game.state.start 'play'
+  game.state.add 'load', loadState
+  game.state.start 'load'
   return
+
+loadState =
+  preload: ->
+    game.load.audio 'engine sound', 'assets/Engine Sound loop.mp3'
+    return
+  create: ->
+    game.state.start 'play'
+    return
+  update: ->
+  render: ->
 
 titleState =
   preload: ->
@@ -133,6 +150,11 @@ create = ->
   fkey = game.input.keyboard.addKey Phaser.Keyboard.F
   game.input.mouse.capture = true
 
+  engineSound = game.add.audio 'engine sound', 0, true
+  engineSound.onDecoded.add ->
+    engineSound.play null, 0, 0.0
+    engineSound.fadeTo 500, engineVolumeMin
+
   game.stage.backgroundColor = 'rgb(12, 24, 32)'
 
   graphics = game.add.graphics 0, 0
@@ -179,6 +201,7 @@ update = ->
     processWeaponEnergy()
     processShapeshiftKeys()
     processPlayerMovement()
+    adjustEngineSound()
     addPlayerThrust()
   processParticles()
   processBulletMovement()
@@ -714,6 +737,28 @@ processTriangleMovement = ->
 
   moveEntityByVel player
 
+  return
+
+adjustEngineSound = ->
+  switch player.mode
+    when 'circle', 'star' then adjustEngineSoundCircle()
+    when 'triangle' then adjustEngineSoundTriangle()
+  return
+
+adjustEngineSoundCircle = ->
+  speed = Math.sqrt(player.vx**2 + player.vy**2)
+  fraction = game.math.clamp(speed / engineMaxAtSpeed, 0, 1)
+  v0 = engineVolumeMin
+  v1 = engineVolumeMax
+  volume = v0 + (fraction * (v1-v0))
+  engineSound.fadeTo 3/60, volume
+  return
+
+adjustEngineSoundTriangle = ->
+  if playerSaysUp()
+    engineSound.fadeTo 300, engineVolumeMax
+  else
+    engineSound.fadeTo 700, engineVolumeMin
   return
 
 moveEntityByVel = (entity) ->
