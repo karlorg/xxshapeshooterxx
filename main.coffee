@@ -73,6 +73,7 @@ cursors = null
 deathRays = null
 enemies = null
 enemiesToKill = null
+enemyHitSounds = []
 engineSound = null
 game = null
 graphics = null
@@ -102,6 +103,8 @@ loadState =
     game.load.audio 'pew1', 'assets/pew1.mp3'
     game.load.audio 'pew2', 'assets/pew2.mp3'
     game.load.audio 'pew3', 'assets/pew3.mp3'
+    game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
+    game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
     return
   create: ->
     game.state.start 'play'
@@ -164,6 +167,9 @@ create = ->
   pewSounds[1] = game.add.audio 'pew1'
   pewSounds[2] = game.add.audio 'pew2'
   pewSounds[3] = game.add.audio 'pew3'
+  enemyHitSounds = []
+  enemyHitSounds[0] = game.add.audio 'enemyhit0'
+  enemyHitSounds[1] = game.add.audio 'enemyhit1'
 
   game.stage.backgroundColor = 'rgb(12, 24, 32)'
 
@@ -651,6 +657,15 @@ shootStar = ->
   playPew()
   return
 
+playEnemyHit = ->
+  which = game.rnd.between 0, enemyHitSounds.length-1
+  for snd, i in enemyHitSounds
+    if i == which
+      snd.play()
+    else
+      snd.stop()
+  return
+
 playPew = ->
   energy = weapons[player.mode].energy
   if energy > 75  # 3 * 100/numPews
@@ -1007,6 +1022,7 @@ processProjectileMovement = (ary) ->
 killEnemy = (enemy, index, source) ->
   enemiesToKill[index] = true
   explode enemy, source, enemy.color
+  playEnemyHit()
   if enemy.score
     score += enemy.score
   return
