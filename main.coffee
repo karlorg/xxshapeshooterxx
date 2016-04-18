@@ -1408,10 +1408,18 @@ killPlayer = (source) ->
   player.alive = false
   source ?= { x: player.x, y: player.y, vx: 0, vy: 0 }
   explode player, source, playerColor, duration: 1000
-  game.time.events.add 3000, -> game.state.start 'title'
+
   playerDeathSound.play()
   engineSound.fadeOut 200
   musicSound.fadeTo 1, 0
+
+  game.time.events.add 2000, ->
+    game.add.text 50, 50, "Final score: #{score}",
+                  {font: "50px Arial", fill: "#ffffff"}
+    game.add.text 50, scrH-100, "Click to continue",
+                  {font: "50px Arial", fill: "#ffffff"}
+  game.input.onTap.add -> game.state.start 'title'
+
   return
 
 damagePlayer = (dmg, source) ->
