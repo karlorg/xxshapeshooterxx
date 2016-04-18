@@ -105,6 +105,8 @@ preload = ->
 
 create = ->
 
+  game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT
+
   bullets = []
   deathRays = []
   enemies = []
@@ -128,6 +130,7 @@ create = ->
     Phaser.KeyCode.LEFT
     Phaser.KeyCode.RIGHT
   ]
+  fkey = game.input.keyboard.addKey Phaser.Keyboard.F
   game.input.mouse.capture = true
 
   game.stage.backgroundColor = 'rgb(12, 24, 32)'
