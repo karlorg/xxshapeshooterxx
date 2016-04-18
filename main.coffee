@@ -89,6 +89,7 @@ score = null
 shapeshiftSound = null
 shieldSound = null
 shieldSoundWasPlaying = null
+soundIconButton = null
 texts = null
 waves = null
 weapons = null
@@ -117,9 +118,12 @@ loadState =
     game.load.audio 'music', 'assets/music.mp3'
     game.load.audio 'shapeshift sound', 'assets/shapeshift.mp3'
     game.load.audio 'shield sound', 'assets/shieldloop.mp3'
+    game.load.spritesheet 'sound icon', 'assets/sound icon.png', 50, 35
+    game.load.image 'start button', 'assets/start button.png'
     return
   create: ->
-    game.state.start 'play'
+    game.sound.mute = true
+    game.state.start 'title'
     return
   update: ->
   render: ->
@@ -129,13 +133,39 @@ titleState =
   create: ->
     game.add.text 80, 80, "xXShapeShooterXx",
                   {font: "50px Arial", fill: "#ffffff"}
-    game.add.text 80, scrH-80-50, "Click to start",
-                  {font: "50px Arial", fill: "#ffffff"}
-    game.input.onTap.add -> game.state.start 'play'
+
+    @startButton = game.add.button 80, scrH-80-64, 'start button',
+                                   @startButtonClick, this
+
+    # game.input.onTap.add -> game.state.start 'play'
+    soundIconButton = game.add.button scrW-80-50, scrH-80-35, 'sound icon',
+                                      @soundIconClick, this
+    @setSoundIconState()
+    musicSound = game.add.sound 'music', 0, true
+    musicSound.onDecoded.add ->
+      musicSound.play null, null, 0
+      musicSound.fadeTo 1000, 0.3
     return
 
   update: ->
   render: ->
+
+  shutDown: ->
+    musicSound.fadeOut 200
+
+  setSoundIconState: ->
+    soundIconButton.frame = switch game.sound.mute
+      when true then 1
+      else 0
+    return
+
+  soundIconClick: ->
+    game.sound.mute = not game.sound.mute
+    @setSoundIconState()
+    return
+
+  startButtonClick: ->
+    game.state.start 'play'
 
 preload = ->
   return
