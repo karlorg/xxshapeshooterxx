@@ -6,6 +6,10 @@ arenaBounds = { left: 8, right: 592, top: 8, bottom: 592 }
 arenaWidth = arenaBounds.right - arenaBounds.left
 arenaHeight = arenaBounds.bottom - arenaBounds.top
 bulletSpeed = 600 / 60
+chaserColor = 0xf22727
+chaserDiameter = 40
+chaserInertia = 0.8
+chaserSpeed = 320 / 60
 chargerColor = 0xe36912
 chargerDiameter = 35
 chargerInertia = 0.98
@@ -594,6 +598,8 @@ drawEnemy = (enemy) ->
       drawStrafer enemy
     when 'charger'
       drawCharger enemy
+    when 'chaser'
+      drawChaser enemy
   return
 
 drawEnemyAtScreenCoords = (type, sx, sy) ->
@@ -636,6 +642,22 @@ drawCharger = (charger) ->
   {x, y} = toScreen left, top
   width = distToScreen (charger.radius*2)
   graphics.drawRect x, y, width, width
+  graphics.endFill()
+  return
+
+drawChaser = (chaser) ->
+  graphics.lineStyle 0
+  graphics.beginFill chaserColor, 1.0
+  shape = [[1, 0], [0.3, 0.3], [0, 1], [-0.3, 0.3],
+           [-1, 0], [-0.3, -0.3], [0, -1], [0.3, -0.3]]
+  for point in shape
+    point[0] *= chaser.radius
+    point[1] *= chaser.radius
+  {x, y} = toScreen shape[7][0]+chaser.x, shape[7][1]+chaser.y
+  graphics.moveTo x, y
+  for [px, py] in shape
+    {x, y} = toScreen px+chaser.x, py+chaser.y
+    graphics.lineTo x, y
   graphics.endFill()
   return
 
@@ -1013,6 +1035,8 @@ processEnemyMovement = ->
         processStraferMovement enemy
       when 'charger'
         processChargerMovement enemy
+      when 'chaser'
+        processChaserMovement enemy
   return
 
 processDrifterMovement = (drifter) ->
@@ -1077,6 +1101,10 @@ circlePlayer = (enemy) ->
   success = moveEntityByVel enemy
   if not success
     enemy.strafeDir *= -1
+  return
+
+processChaserMovement = (chaser) ->
+  moveToPlayer chaser
   return
 
 straferFire = (strafer) ->
@@ -1258,6 +1286,8 @@ makeEnemy = (type, wave=null) ->
       spawnStrafer wave
     when 'charger'
       spawnCharger wave
+    when 'chaser'
+      spawnChaser wave
 
 spawnDrifter = ->
   enemy = {
@@ -1345,6 +1375,22 @@ getChargerSpawnPoint = (wave=null) ->
         return getEnemySpawnPoint()
         break
   return {x, y}
+
+spawnChaser = (wave=null) ->
+  enemy = {
+    type: 'chaser'
+    bodytype: 'circle'
+    color: chaserColor
+    speed: chaserSpeed
+    radius: chaserDiameter / 2
+    score: 3
+    vx: 0
+    vy: 0
+  }
+  {x, y} = getEnemySpawnPoint()
+  enemy.x = x
+  enemy.y = y
+  return enemy
 
 spawnPointParticle = (x, y, ttl, options={}) ->
   {angle, speed, color, opacity} = options
@@ -1567,10 +1613,16 @@ waveProgression = [
 
 waveLibrary = [
 
-  { data: [{count: 3, type: 'drifter', interval: 250 / 12},
-           {count: 5, type: 'strafer'}]}
+  { data: [{count: 5, type: 'strafer'},
+           {count: 3, type: 'drifter'}]}
 
-  { data: [{count: 6, type: 'drifter', interval: 250 / 12},
+  { data: [{count: 6, type: 'drifter'},
+           {count: 3, type: 'strafer'}]}
+
+  { data: [{count: 6, type: 'drifter'},
+           {count: 6, type: 'chaser'}]}
+
+  { data: [{count: 4, type: 'chaser'},
            {count: 3, type: 'strafer'}]}
 
   { data: [{count: 12, type: 'charger', interval: 250 / 12},
@@ -1578,5 +1630,8 @@ waveLibrary = [
 
   { data: [{count: 9, type: 'charger', interval: 250 / 12},
            {count: 3, type: 'strafer'}]}
+
+  { data: [{count: 8, type: 'charger', interval: 250 / 12},
+           {count: 3, type: 'chaser'}]}
 
 ]
