@@ -78,6 +78,7 @@ game = null
 graphics = null
 keys = null
 particles = null
+pewSounds = null
 player = null
 score = null
 texts = null
@@ -97,6 +98,10 @@ window.onload = ->
 loadState =
   preload: ->
     game.load.audio 'engine sound', 'assets/Engine Sound loop.mp3'
+    game.load.audio 'pew0', 'assets/pew0.mp3'
+    game.load.audio 'pew1', 'assets/pew1.mp3'
+    game.load.audio 'pew2', 'assets/pew2.mp3'
+    game.load.audio 'pew3', 'assets/pew3.mp3'
     return
   create: ->
     game.state.start 'play'
@@ -154,6 +159,11 @@ create = ->
   engineSound.onDecoded.add ->
     engineSound.play null, 0, 0.0
     engineSound.fadeTo 500, engineVolumeMin
+  pewSounds = []
+  pewSounds[0] = game.add.audio 'pew0'
+  pewSounds[1] = game.add.audio 'pew1'
+  pewSounds[2] = game.add.audio 'pew2'
+  pewSounds[3] = game.add.audio 'pew3'
 
   game.stage.backgroundColor = 'rgb(12, 24, 32)'
 
@@ -619,6 +629,7 @@ shootTriangle = ->
     color: weaponColor
   }
   bullets.push bullet
+  playPew()
   return bullet
 
 shootStar = ->
@@ -637,6 +648,24 @@ shootStar = ->
     color: weaponColor
   }
   bullets.push bullet
+  playPew()
+  return
+
+playPew = ->
+  energy = weapons[player.mode].energy
+  if energy > 75  # 3 * 100/numPews
+    which = 0
+  else if energy > 50  # 2 * 100/numPews
+    which = 1
+  else if energy > 25  # 1 * 100/numPews
+    which = 2
+  else if energy > 0  # 0 * 100/numPews
+    which = 3
+  for pew, i in pewSounds
+    if i == which
+      pew.play null, null, 0.4 + 0.6*energy/100
+    else
+      pew.stop()
   return
 
 playerSaysLeft = -> cursors.left.isDown or keys.left.isDown
