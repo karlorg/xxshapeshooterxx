@@ -35,6 +35,9 @@ enemyColor = 0xed4588
 engineVolumeMin = 0.2
 engineVolumeMax = 1.0
 healthColor = 0x83f765
+healthDiameter = 20
+healthDropChance = 1/24
+healthSpeed = 40/60
 playerColor = 0xffff0b
 scoreMultTimeLimit = 1000  # ms before multiplier is lost
 scrW = 800
@@ -83,6 +86,7 @@ enemyHitSounds = []
 engineSound = null
 game = null
 graphics = null
+healthDrops = null
 keys = null
 musicSound = null
 particles = null
@@ -252,6 +256,7 @@ create = ->
   bullets = []
   deathRays = []
   enemies = []
+  healthDrops = []
   particles = []
   texts = []
   weapons = {}
@@ -340,6 +345,7 @@ update = ->
   clearTexts()
 
   enemiesToKill = {}
+  processHealthMovement()
   processEnemyMovement()
   processEnemyFire()
   if player.alive
@@ -360,6 +366,7 @@ update = ->
   removeSetFromArray enemiesToKill, enemies
   enemiesToKill = {}
   if player.alive
+    collideHealthAndPlayer()
     collideDeathRaysAndPlayer()
     collideEnemiesAndPlayer()
   removeSetFromArray enemiesToKill, enemies
@@ -449,6 +456,7 @@ draw = ->
   graphics.clear()
 
   drawPlayer()
+  drawHealthDrops()
   drawEnemies()
   drawParticles()
   drawBullets()
@@ -584,6 +592,27 @@ drawPlayerNPoly = (n, options={}) ->
     graphics.lineTo sx, sy
   graphics.endFill()
 
+  return
+
+drawHealthDrops = ->
+  for drop in healthDrops
+    drawHealthDrop drop
+  return
+
+drawHealthDrop = (drop) ->
+  graphics.lineStyle 0
+  graphics.beginFill healthColor, 1.0
+  shape = [[1,1], [0.6, 0],[1,-1],[0, -0.6],
+           [-1,-1], [-0.6, 0], [-1, 1], [0, 0.6]]
+  for point in shape
+    point[0] *= drop.radius
+    point[1] *= drop.radius
+  {x, y} = toScreen shape[7][0]+drop.x, shape[7][1]+drop.y
+  graphics.moveTo x, y
+  for [px, py] in shape
+    {x, y} = toScreen px+drop.x, py+drop.y
+    graphics.lineTo x, y
+  graphics.endFill()
   return
 
 drawEnemies = ->
@@ -1026,6 +1055,11 @@ processWeaponEnergy = ->
         weapon.cooling = false
   return
 
+processHealthMovement = ->
+  for health in healthDrops
+    processDrifterMovement health
+  return
+
 processEnemyMovement = ->
   for enemy in enemies
     switch enemy.type
@@ -1212,6 +1246,8 @@ updateMultiplier = ->
 killEnemy = (enemy, index, source) ->
   enemiesToKill[index] = true
   explode enemy, source, enemy.color
+  if game.rnd.frac() < healthDropChance
+    spawnHealth enemy.x, enemy.y
   playEnemyHit()
   if enemy.score
     scored = addPoints enemy.score
@@ -1252,6 +1288,16 @@ collideDeathRaysAndPlayer = ->
   removeSetFromArray deathRaysToKill, deathRays
   return
 
+collideHealthAndPlayer = ->
+  healthDropsToKill = {}
+  testShape = new Phaser.Circle player.x, player.y, player.radius * 2
+  for healthDrop, i in healthDrops
+    if testShape.contains healthDrop.x, healthDrop.y
+      healthDropsToKill[i] = true
+      healPlayer 20
+  removeSetFromArray healthDropsToKill, healthDrops
+  return
+
 collideBulletsAndEnemies = ->
   spent = {}
   for enemy, ei in enemies
@@ -1272,6 +1318,22 @@ collideBulletsAndEnemies = ->
   removeSetFromArray spent, bullets
 
   return
+
+spawnHealth = (x, y) ->
+  drop = {
+    type: 'health'
+    bodytype: 'circle'
+    color: healthColor
+    speed: healthSpeed
+    radius: healthDiameter / 2
+    x: x
+    y: y
+  }
+  angle = game.rnd.realInRange 0, tau
+  drop.vx = healthSpeed * Math.cos angle
+  drop.vy = - healthSpeed * Math.sin angle
+  healthDrops.push drop
+  return drop
 
 spawnEnemy = (type, wave=null) ->
   enemy = makeEnemy type, wave
@@ -1477,6 +1539,11 @@ damagePlayer = (dmg, source) ->
   playerHitSound.play()
   if player.health <= 0
     killPlayer source
+  return
+
+healPlayer = (gain) ->
+  player.health += gain
+  if player.health > 100 then player.health = 100
   return
 
 enemyTouchingShield = (enemy) ->
