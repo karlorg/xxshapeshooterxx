@@ -88,6 +88,7 @@ engineSound = null
 game = null
 graphics = null
 healthDrops = null
+healthSound = null
 keys = null
 musicSound = null
 particles = null
@@ -121,6 +122,7 @@ loadState =
     game.load.audio 'enemyhit0', 'assets/enemyhit0.mp3'
     game.load.audio 'enemyhit1', 'assets/enemyhit1.mp3'
     game.load.audio 'engine sound', 'assets/Engine Sound loop.mp3'
+    game.load.audio 'health sound', 'assets/health.mp3'
     game.load.audio 'pew0', 'assets/pew0.mp3'
     game.load.audio 'pew1', 'assets/pew1.mp3'
     game.load.audio 'pew2', 'assets/pew2.mp3'
@@ -144,6 +146,7 @@ loadState =
     engineSound = game.add.audio 'engine sound', 0, true
     engineSound.onDecoded.add ->
       engineSound.play null, 0, 0.0
+    healthSound = game.add.audio 'health sound'
     pewSounds = []
     pewSounds[0] = game.add.audio 'pew0'
     pewSounds[1] = game.add.audio 'pew1'
@@ -1551,6 +1554,7 @@ damagePlayer = (dmg, source) ->
 healPlayer = (gain) ->
   player.health += gain
   if player.health > 100 then player.health = 100
+  healthSound.play()
   return
 
 enemyTouchingShield = (enemy) ->
