@@ -618,21 +618,21 @@ drawCharger = (charger) ->
   return
 
 drawBullets = ->
-  graphics.lineStyle 0
   for bullet in bullets
-    graphics.beginFill weaponColor, 1.0
-    {x, y} = toScreen bullet.x, bullet.y
-    graphics.drawRect x, y, 2, 2
-    graphics.endFill()
+    drawProjectile bullet
   return
 
 drawDeathRays = ->
-  graphics.lineStyle 0
   for deathRay in deathRays
-    graphics.beginFill deathRayColor, 1.0
-    {x, y} = toScreen deathRay.x, deathRay.y
-    graphics.drawRect x-1, y-1, 3, 3
-    graphics.endFill()
+    drawProjectile deathRay
+  return
+
+drawProjectile = (proj) ->
+  graphics.lineStyle 0
+  graphics.beginFill proj.color, 1.0
+  {x, y} = toScreen proj.x, proj.y
+  graphics.drawRect x-1, y-1, 3, 3
+  graphics.endFill()
   return
 
 drawShield = ->
