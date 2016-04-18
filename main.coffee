@@ -377,6 +377,7 @@ clearTexts = ->
   return
 
 queueWaveSeries = ->
+  return unless player.alive
   mkWaveSpawner = (w) ->
     ->
       spawnWave w
@@ -392,7 +393,8 @@ queueWaveSeries = ->
     currDelay += waves.delay
   seriesTime = (waves.seriesLength - 1) * waves.delay
   nextSeriesTime = seriesTime + waves.seriesDelay
-  game.time.events.add nextSeriesTime, queueWaveSeries
+  if player.alive
+    game.time.events.add nextSeriesTime, queueWaveSeries
   incrementWaveSeries()
   return
 
