@@ -176,7 +176,7 @@ titleState =
     game.add.text 4, scrH-60, 'design and code by Karl Naylor',
                   {font: "16px Arial", fill: "#ffffff"}
 
-    game.add.text 4, scrH-40, 'music by Thomas Collins',
+    game.add.text 4, scrH-40, 'music by Thomas Collins (thomascollinsmusic@gmail.com)',
                   {font: "16px Arial", fill: "#ffffff"}
 
     game.add.text 4, scrH-20, 'sound effects based on originals by Thomas Collins',
