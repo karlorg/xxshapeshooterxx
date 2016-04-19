@@ -275,6 +275,7 @@ create = ->
     2: Phaser.KeyCode.TWO
     3: Phaser.KeyCode.THREE
     4: Phaser.KeyCode.FOUR
+    newGame: Phaser.KeyCode.SPACEBAR
   game.input.keyboard.addKeyCapture [
     Phaser.KeyCode.UP
     Phaser.KeyCode.DOWN
@@ -377,6 +378,8 @@ update = ->
   removeSetFromArray enemiesToKill, enemies
   enemiesToKill = {}
 
+  checkNewGameKey()
+
   draw()
   return
 
@@ -455,6 +458,11 @@ createWeapons = ->
   weapons.star.fireDelay = 200
   weapons.star.drain = 20  # since it only drains once per shot
   weapons.star.recharge = 30 / 60
+  return
+
+checkNewGameKey = ->
+  if keys.newGame.isDown and not player.alive
+    game.state.start 'play'
   return
 
 draw = ->
@@ -1534,9 +1542,11 @@ killPlayer = (source) ->
   game.time.events.add 2000, ->
     game.add.text 50, 50, "Final score: #{score}",
                   {font: "50px Arial", fill: "#ffffff"}
-    game.add.text 50, scrH-100, "Click to continue",
+    game.add.text 50, scrH-126, "Click to continue",
                   {font: "50px Arial", fill: "#ffffff"}
-  game.input.onTap.add -> game.state.start 'title'
+    game.add.text 50, scrH-66, "or press Space to start a new game",
+                  {font: "16px Arial", fill: "#ffffff"}
+    game.input.onTap.add -> game.state.start 'title'
 
   return
 
